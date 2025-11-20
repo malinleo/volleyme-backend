@@ -1,0 +1,26 @@
+from src.common import entities as common_entities
+from src.volleyme.domain import enums, types
+import typing
+import uuid
+import datetime
+import pydantic
+
+
+class Player(common_entities.AggregateRoot):
+    """Player aggregate root."""
+
+    id: typing.Annotated[
+        types.PlayerId,
+        pydantic.Field(default_factory=lambda: types.PlayerId(uuid.uuid4())),
+    ]
+    type: enums.GameType
+    user_id: types.UserId
+    rating: typing.Annotated[int, pydantic.Field(ge=0)]
+    created_at: typing.Annotated[
+        datetime.datetime,
+        pydantic.Field(default_factory=datetime.datetime.now),
+    ]
+    updated_at: typing.Annotated[
+        datetime.datetime,
+        pydantic.Field(default_factory=datetime.datetime.now),
+    ]
