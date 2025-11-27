@@ -4,6 +4,7 @@ import typing
 import uuid
 import sqlalchemy.orm
 from src.common.models import base as base_models
+from src.volleyme.domain import enums
 
 if typing.TYPE_CHECKING:
     from .event import Event
@@ -23,8 +24,8 @@ class Game(
         "Event",
         back_populates="games",
     )
-    type: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.String(50),
+    type: sqlalchemy.orm.Mapped[enums.GameType] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.Integer,
     )
     type_info: sqlalchemy.orm.Mapped[dict[str, typing.Any]] = (
         sqlalchemy.orm.mapped_column(

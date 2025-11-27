@@ -11,15 +11,25 @@ class PlayerRepo(
 
     _model_class = models.Player
 
+    def _parse_player_model(self, player_model: models.Player) -> aggregates.Player:
+        return aggregates.Player(
+            id=types.PlayerId(player_model.id),
+            type=player_model.type,
+            user_id=types.UserId(player_model.user_id),
+            rating=player_model.rating,
+            created_at=player_model.created_at,
+            updated_at=player_model.updated_at,
+        )
+
     async def get_player(self, player_id: types.PlayerId) -> aggregates.Player:
-        return aggregates.Player.model_validate(
+        return self._parse_player_model(
             await self._get_one(model_class=self._model_class, id=player_id)
         )
 
     async def get_players(self, limit: int, offset: int) -> list[aggregates.Player]:
         return [
-            aggregates.Player.model_validate(player)
-            for player in await self._get_many(
+            self._parse_player_model(player_model)
+            for player_model in await self._get_many(
                 model_class=self._model_class,
                 where=(),
                 order_by=(),
@@ -35,7 +45,7 @@ class PlayerRepo(
             user_id=player.user_id,
             rating=player.rating,
         )
-        return aggregates.Player.model_validate(await self._save(player_model))
+        return self._parse_player_model(await self._save(player_model))
 
     async def delete_player(self, player_id: types.PlayerId) -> None:
         return await self._delete(

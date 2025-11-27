@@ -19,7 +19,7 @@ class Event(common_entities.AggregateRoot):
     title: typing.Annotated[str, pydantic.Field(max_length=255)]
     description: str
     price: typing.Annotated[int, pydantic.Field(ge=0)]
-    image_urls: list[pydantic.FileUrl]
+    image_urls: list[str]
     games: list[Game]
 
 
