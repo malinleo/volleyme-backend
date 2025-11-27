@@ -1,4 +1,12 @@
 .venv
 .python-version
 .env
+.vscode/
 __pycache__/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+.coverage.xml

@@ -16,15 +16,10 @@ class Event(common_entities.AggregateRoot):
         pydantic.Field(default_factory=lambda: types.EventId(uuid.uuid4())),
     ]
     start_dt: datetime.datetime
-
     title: typing.Annotated[str, pydantic.Field(max_length=255)]
-
     description: str
-
     price: typing.Annotated[int, pydantic.Field(ge=0)]
-
     image_urls: list[pydantic.FileUrl]
-
     games: list[Game]
 
 

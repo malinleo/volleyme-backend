@@ -1,0 +1,22 @@
+import typing
+from src.volleyme.domain import types, aggregates
+
+
+class UserRepo(typing.Protocol):
+    """User repository protocol."""
+
+    async def get_user(self, user_id: types.UserId) -> aggregates.User:
+        """Get user by id."""
+        ...
+
+    async def get_users(self, limit: int, offset: int) -> list[aggregates.User]:
+        """Get list of users with pagination."""
+        ...
+
+    async def save_user(self, user: aggregates.User) -> aggregates.User:
+        """Save user."""
+        ...
+
+    async def delete_user(self, user_id: types.UserId) -> None:
+        """Delete user by id."""
+        ...

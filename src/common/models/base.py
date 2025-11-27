@@ -1,5 +1,5 @@
 import datetime
-
+import uuid
 import sqlalchemy.orm
 
 
@@ -34,6 +34,8 @@ class IDModel(BaseModel):
 
     __abstract__ = True
 
-    id: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(
+    id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.UUID,
+        default=uuid.uuid4,
         primary_key=True,
     )
