@@ -1,6 +1,7 @@
 from src.volleyme.domain import repos, types, aggregates
 from src.common import repos as common_repos
 from src.volleyme.infra.db import models
+import sqlalchemy.orm
 
 
 class UserRepo(
@@ -30,10 +31,10 @@ class UserRepo(
             )
         return user
 
-    async def get_user(self, user_id: types.UserId) -> aggregates.User:
-        return self._parse_user_model(
-            await self._get_one(model_class=self._model_class, id=user_id)
-        )
+    async def get_user(self, user_id: types.UserId) -> aggregates.User | None:
+        user_model = await self._try_get_one(model_class=self._model_class, id=user_id)
+        if user_model:
+            return self._parse_user_model(user_model)
 
     async def get_users(self, limit: int, offset: int) -> list[aggregates.User]:
         return [
@@ -53,9 +54,7 @@ class UserRepo(
             email=user.email,
             password=user.password,
         )
-        selectin_load_fields = set()
         if user.profile:
-            selectin_load_fields.add(self._model_class.profile)
             user_model.profile = models.Profile(
                 user_id=user.id,
                 first_name=user.profile.first_name,
@@ -64,7 +63,7 @@ class UserRepo(
             )
         user_model = await self._save(
             user_model,
-            selectin_load_fields=selectin_load_fields,
+            load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
         )
         return self._parse_user_model(user_model)
 

@@ -18,9 +18,9 @@ class Player(common_entities.AggregateRoot):
     rating: typing.Annotated[int, pydantic.Field(ge=0)]
     created_at: typing.Annotated[
         datetime.datetime,
-        pydantic.Field(default_factory=datetime.datetime.now),
+        pydantic.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC)),
     ]
     updated_at: typing.Annotated[
         datetime.datetime,
-        pydantic.Field(default_factory=datetime.datetime.now),
+        pydantic.Field(default_factory=lambda: datetime.datetime.now(datetime.UTC)),
     ]

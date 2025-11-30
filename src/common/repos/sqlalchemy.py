@@ -1,13 +1,11 @@
 import abc
-import asyncio
 import collections.abc
 import typing
 
 import sqlalchemy.exc
 import sqlalchemy.ext.asyncio
-import sqlalchemy.orm
+import sqlalchemy.orm.strategy_options
 import uuid
-from src.common import exc as common_exc
 from src.common import models
 
 from . import exc
@@ -49,11 +47,8 @@ class SQLAlchemyModelRepo(
         ] = tuple(),
         limit: int | None = None,
         offset: int | None = None,
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> sqlalchemy.Result[tuple[ModelT, ...]]:
         """Get result of select query."""
@@ -64,14 +59,8 @@ class SQLAlchemyModelRepo(
             .limit(limit=limit)
             .offset(offset=offset)
         )
-        if selectin_load_fields:
-            query = query.options(
-                sqlalchemy.orm.selectinload(*selectin_load_fields),
-            )
-        if joined_load_fields:
-            query = query.options(
-                sqlalchemy.orm.joinedload(*joined_load_fields),
-            )
+        if load_configs:
+            query = query.options(*load_configs)
         try:
             return await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
@@ -81,31 +70,24 @@ class SQLAlchemyModelRepo(
         self,
         id: IdDataT,
         model_class: type[ModelT],
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> ModelT | None:
         """Get one instance by or `None`."""
         result = await self._run_select(
             model_class=model_class,
             where=self._build_model_ident_expressions(id=id, model_class=model_class),
-            selectin_load_fields=selectin_load_fields,
-            joined_load_fields=joined_load_fields,
+            load_configs=load_configs,
         )
-        return result.scalar_one_or_none()
+        return result.unique().scalar_one_or_none()
 
     async def _get_one(
         self,
         id: IdDataT,
         model_class: type[ModelT],
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> ModelT:
         """Get one instance by or raise error.
@@ -117,14 +99,11 @@ class SQLAlchemyModelRepo(
         if instance := await self._try_get_one(
             id=id,
             model_class=model_class,
-            selectin_load_fields=selectin_load_fields,
-            joined_load_fields=joined_load_fields,
+            load_configs=load_configs,
         ):
             return instance
         raise exc.NotFoundError(
-            msg=common_exc.ERROR_TEXTS[common_exc.ErrorCode.REPO_NOT_FOUND].format(
-                object_data=f"id = {id}",
-            ),
+            msg=f"Object with {id=} wasn't found",
         )
 
     async def _get_many(
@@ -138,11 +117,8 @@ class SQLAlchemyModelRepo(
         ],
         limit: int | None = None,
         offset: int | None = None,
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> collections.abc.Sequence[ModelT]:
         """Get list of instances filtered by `where` conditions."""
@@ -152,19 +128,15 @@ class SQLAlchemyModelRepo(
             order_by=order_by,
             limit=limit,
             offset=offset,
-            selectin_load_fields=selectin_load_fields,
-            joined_load_fields=joined_load_fields,
+            load_configs=load_configs,
         )
         return result.scalars().unique().all()
 
     async def _save(
         self,
         instance: ModelT,
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> ModelT:
         """Save instance to db."""
@@ -174,8 +146,7 @@ class SQLAlchemyModelRepo(
             await self._db_session.flush()
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"{common_exc.ERROR_TEXTS[common_exc.ErrorCode.REPO_SAVE]}"
-                f":\n{error}",
+                msg=f"Object save error:\n{error}",
             ) from error
         instance = (
             await self._get_many(
@@ -185,8 +156,7 @@ class SQLAlchemyModelRepo(
                     model_class=model_class,
                 ),
                 order_by=(),
-                selectin_load_fields=selectin_load_fields,
-                joined_load_fields=joined_load_fields,
+                load_configs=load_configs,
             )
         )[0]
         return instance
@@ -194,11 +164,8 @@ class SQLAlchemyModelRepo(
     async def _bulk_save(
         self,
         instances: collections.abc.Sequence[ModelT],
-        selectin_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
-        ] = set(),
-        joined_load_fields: collections.abc.Set[
-            sqlalchemy.orm.InstrumentedAttribute[typing.Any],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> collections.abc.Sequence[ModelT]:
         """Save multiple instances."""
@@ -210,7 +177,7 @@ class SQLAlchemyModelRepo(
             await self._db_session.flush()
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"{common_exc.ERROR_TEXTS[common_exc.ErrorCode.REPO_SAVE]}",
+                msg=f"Object save error:\n{error}",
             ) from error
         where_exprs = (
             self._build_model_ident_expressions(
@@ -223,8 +190,7 @@ class SQLAlchemyModelRepo(
             model_class=model_class,
             where=tuple(*sqlalchemy.and_(*where_exprs)),
             order_by=(),
-            selectin_load_fields=selectin_load_fields,
-            joined_load_fields=joined_load_fields,
+            load_configs=load_configs,
         )
 
     async def _delete(
@@ -240,7 +206,7 @@ class SQLAlchemyModelRepo(
             await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"{common_exc.ERROR_TEXTS[common_exc.ErrorCode.REPO_SAVE]}",
+                msg=f"Object save error:\n{error}",
             ) from error
 
     async def _delete_instance(

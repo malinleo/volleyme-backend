@@ -11,16 +11,22 @@ import pydantic
 class Event(common_entities.AggregateRoot):
     """Event aggregate root."""
 
-    id: typing.Annotated[
-        types.EventId,
-        pydantic.Field(default_factory=lambda: types.EventId(uuid.uuid4())),
-    ]
+    id: types.EventId = pydantic.Field(
+        default_factory=lambda: types.EventId(uuid.uuid4())
+    )
     start_dt: datetime.datetime
     title: typing.Annotated[str, pydantic.Field(max_length=255)]
     description: str
     price: typing.Annotated[int, pydantic.Field(ge=0)]
     image_urls: list[str]
     games: list[Game]
+    type: enums.GameType
+    created_at: datetime.datetime = pydantic.Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
+    updated_at: datetime.datetime = pydantic.Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
 
 class Game(common_entities.BaseEntity):

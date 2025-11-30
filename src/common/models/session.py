@@ -16,9 +16,9 @@ async_session_factory = sqlalchemy.ext.asyncio.async_sessionmaker(
 )
 
 
-async def get_db_session() -> collections.abc.AsyncGenerator[
-    sqlalchemy.ext.asyncio.AsyncSession, None
-]:
+async def get_db_session(
+    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker,
+) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session
@@ -30,9 +30,9 @@ async def get_db_session() -> collections.abc.AsyncGenerator[
 
 
 @contextlib.asynccontextmanager
-async def get_db_session_context() -> collections.abc.AsyncGenerator[
-    sqlalchemy.ext.asyncio.AsyncSession, None
-]:
+async def get_db_session_context(
+    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker,
+) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session

@@ -5,7 +5,7 @@ from src.volleyme.domain import types, aggregates
 class EventRepo(typing.Protocol):
     """Event repository protocol."""
 
-    async def get_event(self, event_id: types.EventId) -> aggregates.Event:
+    async def get_event(self, event_id: types.EventId) -> aggregates.Event | None:
         """Get event by id."""
         ...
 

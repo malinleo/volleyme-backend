@@ -21,10 +21,12 @@ class PlayerRepo(
             updated_at=player_model.updated_at,
         )
 
-    async def get_player(self, player_id: types.PlayerId) -> aggregates.Player:
-        return self._parse_player_model(
-            await self._get_one(model_class=self._model_class, id=player_id)
+    async def get_player(self, player_id: types.PlayerId) -> aggregates.Player | None:
+        player_model = await self._try_get_one(
+            model_class=self._model_class, id=player_id
         )
+        if player_model:
+            return self._parse_player_model(player_model)
 
     async def get_players(self, limit: int, offset: int) -> list[aggregates.Player]:
         return [

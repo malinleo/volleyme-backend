@@ -17,7 +17,7 @@ class Event(
     __tablename__ = "event"
 
     start_dt: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.DateTime,
+        sqlalchemy.DateTime(timezone=True),
     )
     title: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.String(255),

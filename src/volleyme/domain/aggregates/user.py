@@ -34,10 +34,10 @@ class User(common_entities.AggregateRoot):
         default_factory=lambda: types.UserId(uuid.uuid4()),
     )
     created_at: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )
     updated_at: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )
     profile: Profile | None = None
 
@@ -50,8 +50,8 @@ class Profile(common_entities.BaseEntity):
     last_name: str = pydantic.Field(max_length=100)
     avatar_url: str
     created_at: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )
     updated_at: datetime.datetime = pydantic.Field(
-        default_factory=datetime.datetime.now,
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )

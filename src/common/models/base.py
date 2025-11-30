@@ -19,11 +19,11 @@ class TimeStampedModel(BaseModel):
     __abstract__ = True
 
     created_at: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.TIMESTAMP(timezone=True),
+        sqlalchemy.DateTime(timezone=True),
         server_default=sqlalchemy.text("now()"),
     )
     updated_at: sqlalchemy.orm.Mapped[datetime.datetime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.TIMESTAMP(timezone=True),
+        sqlalchemy.DateTime(timezone=True),
         server_default=sqlalchemy.text("now()"),
         server_onupdate=sqlalchemy.text("now()"),
     )
