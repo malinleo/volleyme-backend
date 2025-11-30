@@ -2,7 +2,7 @@ import fastapi
 import typing
 from dependency_injector import wiring
 from src.volleyme.application import usecases, dto
-from src.volleyme.infra.di.container import DI
+from src.volleyme.infra import di
 from src.volleyme.presentation.rest import schemas
 import uuid
 
@@ -14,7 +14,7 @@ router = fastapi.APIRouter(prefix="/events", tags=["events"])
 async def get_event(
     usecase: typing.Annotated[
         usecases.GetEventByIdUseCase,
-        fastapi.Depends(wiring.Provide[DI.usecases.get_event_by_id]),
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.get_event_by_id]]),
     ],
     event_id: uuid.UUID,
 ):
@@ -26,7 +26,7 @@ async def get_event(
 async def create_event(
     usecase: typing.Annotated[
         usecases.CreateEventUseCase,
-        fastapi.Depends(wiring.Closing[wiring.Provide[DI.usecases.create_event]]),
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.create_event]]),
     ],
     event: schemas.CreateEventRequest,
 ):

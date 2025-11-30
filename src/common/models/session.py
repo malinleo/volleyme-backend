@@ -1,5 +1,4 @@
 import contextlib
-import typing
 import collections.abc
 
 import sqlalchemy.ext.asyncio
@@ -17,7 +16,9 @@ async_session_factory = sqlalchemy.ext.asyncio.async_sessionmaker(
 
 
 async def get_db_session(
-    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker,
+    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker[
+        sqlalchemy.ext.asyncio.AsyncSession
+    ],
 ) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:
@@ -31,7 +32,9 @@ async def get_db_session(
 
 @contextlib.asynccontextmanager
 async def get_db_session_context(
-    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker,
+    async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker[
+        sqlalchemy.ext.asyncio.AsyncSession
+    ],
 ) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:

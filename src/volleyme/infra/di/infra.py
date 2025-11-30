@@ -20,7 +20,7 @@ class Infra(containers.DeclarativeContainer):
         expire_on_commit=False,
     )
     db_session = providers.Resource(
-        common_models.get_db_session_context,
+        common_models.get_db_session,
         async_session_factory=async_session_factory,
     )
     event_repo = providers.Factory(
