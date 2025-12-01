@@ -1,12 +1,18 @@
-from .user import (
-    User as User,
-    Profile as Profile,
+from .event import (
+    Event as Event,
+)
+from .event import (
+    Game as Game,
+)
+from .event import (
+    GameTeam as GameTeam,
 )
 from .player import (
     Player as Player,
 )
-from .event import (
-    Event as Event,
-    Game as Game,
-    GameTeam as GameTeam,
+from .user import (
+    Profile as Profile,
+)
+from .user import (
+    User as User,
 )

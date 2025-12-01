@@ -1,5 +1,6 @@
-import pydantic_settings
 import functools
+
+import pydantic_settings
 
 
 class Settings(pydantic_settings.BaseSettings):

@@ -1,8 +1,10 @@
-import pydantic
-from src.common import schemas
-import uuid
 import datetime
 import typing
+import uuid
+
+import pydantic
+
+from src.common import schemas
 from src.volleyme.domain import enums
 
 

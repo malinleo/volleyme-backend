@@ -1,4 +1,6 @@
 from .events import (
-    GetEventResponse as GetEventResponse,
     CreateEventRequest as CreateEventRequest,
+)
+from .events import (
+    GetEventResponse as GetEventResponse,
 )

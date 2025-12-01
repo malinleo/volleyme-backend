@@ -1,10 +1,12 @@
-import fastapi
 import typing
+import uuid
+
+import fastapi
 from dependency_injector import wiring
-from src.volleyme.application import usecases, dto
+
+from src.volleyme.application import dto, usecases
 from src.volleyme.infra import di
 from src.volleyme.presentation.rest import schemas
-import uuid
 
 router = fastapi.APIRouter(prefix="/events", tags=["events"])
 

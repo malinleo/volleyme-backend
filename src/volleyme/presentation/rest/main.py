@@ -1,9 +1,9 @@
 import fastapi
-from src.config import settings
-from src.volleyme.presentation.rest import endpoints, exc_handlers
-from src.common import usecases
-from src.volleyme.infra.di import DI
 
+from src.common import usecases
+from src.config import settings
+from src.volleyme.infra.di import DI
+from src.volleyme.presentation.rest import endpoints, exc_handlers
 
 container = DI()
 container.wire(modules=[__name__, endpoints.events])

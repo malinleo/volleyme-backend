@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import typing
 import uuid
+
 import sqlalchemy
 import sqlalchemy.orm
+
 from src.common.models import base as base_models
 from src.volleyme.domain import enums
 

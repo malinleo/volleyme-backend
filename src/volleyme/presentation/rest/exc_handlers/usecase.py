@@ -1,6 +1,7 @@
 import fastapi
-from src.common import usecases
 from fastapi import status
+
+from src.common import usecases
 
 
 def handle_use_case_error(

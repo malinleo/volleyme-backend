@@ -1,11 +1,12 @@
 import abc
 import collections.abc
 import typing
+import uuid
 
 import sqlalchemy.exc
 import sqlalchemy.ext.asyncio
 import sqlalchemy.orm.strategy_options
-import uuid
+
 from src.common import models
 
 from . import exc

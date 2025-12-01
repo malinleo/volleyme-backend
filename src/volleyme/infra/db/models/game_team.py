@@ -1,6 +1,8 @@
 import typing
 import uuid
+
 import sqlalchemy.orm
+
 from src.common.models import base as base_models
 
 if typing.TYPE_CHECKING:

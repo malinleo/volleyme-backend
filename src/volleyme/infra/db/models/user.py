@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import typing
+
 import sqlalchemy
 import sqlalchemy.orm
+
 from src.common.models import base as base_models
-import typing
 
 if typing.TYPE_CHECKING:
     from .profile import Profile

@@ -1,5 +1,6 @@
 import typing
-from src.volleyme.domain import types, aggregates
+
+from src.volleyme.domain import aggregates, types
 
 
 class EventRepo(typing.Protocol):

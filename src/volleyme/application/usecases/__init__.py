@@ -1,5 +1,9 @@
 from .events import (
-    GetEventByIdUseCase as GetEventByIdUseCase,
-    GetEventsUseCase as GetEventsUseCase,
     CreateEventUseCase as CreateEventUseCase,
+)
+from .events import (
+    GetEventByIdUseCase as GetEventByIdUseCase,
+)
+from .events import (
+    GetEventsUseCase as GetEventsUseCase,
 )

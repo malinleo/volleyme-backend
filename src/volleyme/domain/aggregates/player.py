@@ -1,9 +1,11 @@
-from src.common import entities as common_entities
-from src.volleyme.domain import enums, types
+import datetime
 import typing
 import uuid
-import datetime
+
 import pydantic
+
+from src.common import entities as common_entities
+from src.volleyme.domain import enums, types
 
 
 class Player(common_entities.AggregateRoot):

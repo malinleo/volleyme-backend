@@ -1,9 +1,8 @@
-import re
-
-import attrs
 import collections.abc
+import re
 import typing
 
+import attrs
 
 Validator = collections.abc.Callable[
     [attrs.AttrsInstance, attrs.Attribute, typing.Any], None

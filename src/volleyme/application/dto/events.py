@@ -1,7 +1,9 @@
-from src.common import dto
 import datetime
 import typing
+
 import pydantic
+
+from src.common import dto
 from src.volleyme.domain import enums
 
 

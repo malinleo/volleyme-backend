@@ -1,5 +1,6 @@
-from src.common import exc
 import enum
+
+from src.common import exc
 
 
 class UseCaseErrorCode(enum.StrEnum):

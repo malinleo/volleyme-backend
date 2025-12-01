@@ -1,12 +1,11 @@
+import asyncio
 import logging.config
 
-import sqlalchemy.ext.asyncio
 import alembic
+import sqlalchemy.ext.asyncio
 
 from src.common import models as common_models
 from src.config import settings
-import asyncio
-from src.volleyme.infra.db.models import Player, Profile, User, Game, GameTeam, Event
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

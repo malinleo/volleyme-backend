@@ -1,11 +1,9 @@
+import sqlalchemy.ext.asyncio
 from dependency_injector import containers, providers
 
-from src.volleyme.infra.db import repos
 from src.common import models as common_models
-
-import sqlalchemy.ext.asyncio
-
 from src.config import settings
+from src.volleyme.infra.db import repos
 
 
 class Infra(containers.DeclarativeContainer):

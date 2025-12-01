@@ -1,7 +1,8 @@
-from src.volleyme.domain import repos, types, aggregates
-from src.common import repos as common_repos
-from src.volleyme.infra.db import models
 import sqlalchemy.orm
+
+from src.common import repos as common_repos
+from src.volleyme.domain import aggregates, repos, types
+from src.volleyme.infra.db import models
 
 
 class EventRepo(
