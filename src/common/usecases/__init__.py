@@ -1,1 +1,1 @@
-from . import exc
+from . import exc as exc

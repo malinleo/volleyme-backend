@@ -2,5 +2,8 @@ from .events import (
     CreateEventRequest as CreateEventRequest,
 )
 from .events import (
-    GetEventResponse as GetEventResponse,
+    EventDetailResponse as EventDetailResponse,
+)
+from .events import (
+    EventListResponse as EventListResponse,
 )

@@ -10,6 +10,7 @@ from src.common.models import base as base_models
 from src.volleyme.domain import enums
 
 if typing.TYPE_CHECKING:
+    from .event import Event, EventParticipantRel
     from .user import User
 
 
@@ -30,4 +31,15 @@ class Player(
     )
     rating: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(
         default=0,
+    )
+    events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
+        "Event",
+        secondary="event_participant_rel",
+        back_populates="participants",
+    )
+    events_rel: sqlalchemy.orm.Mapped[list[EventParticipantRel]] = (
+        sqlalchemy.orm.relationship(
+            "EventParticipantRel",
+            back_populates="player",
+        )
     )

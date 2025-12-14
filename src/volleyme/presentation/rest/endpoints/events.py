@@ -8,10 +8,10 @@ from src.volleyme.application import dto, usecases
 from src.volleyme.infra import di
 from src.volleyme.presentation.rest import schemas
 
-router = fastapi.APIRouter(prefix="/events", tags=["events"])
+events_router = fastapi.APIRouter(prefix="/events", tags=["events"])
 
 
-@router.get("/{event_id}", response_model=schemas.GetEventResponse)
+@events_router.get("/{event_id}", response_model=schemas.EventDetailResponse)
 @wiring.inject
 async def get_event(
     usecase: typing.Annotated[
@@ -20,10 +20,26 @@ async def get_event(
     ],
     event_id: uuid.UUID,
 ):
-    return schemas.GetEventResponse.model_validate(await usecase.execute(event_id))
+    return schemas.EventDetailResponse.model_validate(await usecase.execute(event_id))
 
 
-@router.post("/")
+@events_router.get("/", response_model=list[schemas.EventListResponse])
+@wiring.inject
+async def get_events(
+    usecase: typing.Annotated[
+        usecases.GetEventsUseCase,
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.get_events]]),
+    ],
+    limit: int = fastapi.Query(default=25, ge=1, le=100),
+    offset: int = fastapi.Query(default=0, ge=0),
+):
+    return [
+        schemas.EventListResponse.model_validate(event)
+        for event in await usecase.execute(limit, offset)
+    ]
+
+
+@events_router.post("/")
 @wiring.inject
 async def create_event(
     usecase: typing.Annotated[
@@ -32,6 +48,6 @@ async def create_event(
     ],
     event: schemas.CreateEventRequest,
 ):
-    return schemas.GetEventResponse.model_validate(
+    return schemas.EventDetailResponse.model_validate(
         await usecase.execute(dto.CreateEventDto.model_validate(event))
     )

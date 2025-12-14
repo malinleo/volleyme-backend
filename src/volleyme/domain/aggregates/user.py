@@ -55,3 +55,7 @@ class Profile(common_entities.BaseEntity):
     updated_at: datetime.datetime = pydantic.Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
     )
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"

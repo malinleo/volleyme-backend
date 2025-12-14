@@ -6,6 +6,7 @@ import sqlalchemy.ext.asyncio
 
 from src.common import models as common_models
 from src.config import settings
+from src.volleyme.infra.db import models as volleyme_models  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -40,14 +41,6 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = sqlalchemy.URL.create(
-        drivername=settings.DB_DRIVER,
-        username=settings.DB_USER,
-        password=settings.DB_PASSWORD,
-        host=settings.DB_HOST,
-        port=settings.DB_PORT,
-        database=settings.DB_NAME,
-    )
     alembic.context.configure(
         url=settings.db_url,
         target_metadata=target_metadata,

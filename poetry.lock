@@ -833,6 +833,18 @@ files = [
 tests = ["pytest"]
 
 [[package]]
+name = "pycountry"
+version = "24.6.1"
+description = "ISO country, subdivision, language, currency and script definitions and their translations"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "pycountry-24.6.1-py3-none-any.whl", hash = "sha256:f1a4fb391cd7214f8eefd39556d740adcc233c778a27f8942c8dca351d6ce06f"},
+    {file = "pycountry-24.6.1.tar.gz", hash = "sha256:b61b3faccea67f87d10c1f2b0fc0be714409e8fcdcc1315613174f6466c10221"},
+]
+
+[[package]]
 name = "pydantic"
 version = "2.12.4"
 description = "Data validation using Python type hints"
@@ -1317,4 +1329,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14"
-content-hash = "fdd6a7e0fbf880d53a3774874e98b333067bd0abc6b988389181993cf096d4ce"
+content-hash = "4ea3b378aad39650d0d22ffd0008db8068fb8e5697345fb0747650732a4144d4"

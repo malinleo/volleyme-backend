@@ -14,6 +14,13 @@ class PlayerRepo(typing.Protocol):
         """Get list of players with pagination."""
         ...
 
+    async def get_players_by_ids(
+        self,
+        player_ids: list[types.PlayerId],
+    ) -> list[aggregates.Player]:
+        """Get list of players by ids."""
+        ...
+
     async def save_player(self, player: aggregates.Player) -> aggregates.Player:
         """Save player."""
         ...

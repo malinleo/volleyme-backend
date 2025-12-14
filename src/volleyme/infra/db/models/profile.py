@@ -32,3 +32,7 @@ class Profile(
     avatar_url: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Text,
     )
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"

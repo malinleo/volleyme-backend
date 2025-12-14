@@ -14,6 +14,13 @@ class UserRepo(typing.Protocol):
         """Get list of users with pagination."""
         ...
 
+    async def get_users_by_ids(
+        self,
+        user_ids: list[types.UserId],
+    ) -> list[aggregates.User]:
+        """Get list of users by ids."""
+        ...
+
     async def save_user(self, user: aggregates.User) -> aggregates.User:
         """Save user."""
         ...

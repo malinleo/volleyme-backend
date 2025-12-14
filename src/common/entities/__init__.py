@@ -6,5 +6,8 @@ from .base import (
     BaseEntity as BaseEntity,
 )
 from .base import (
+    TimeStampedEntity as TimeStampedEntity,
+)
+from .base import (
     ValueObject as ValueObject,
 )

@@ -9,11 +9,11 @@ class Usecases(containers.DeclarativeContainer):
     infra = providers.Container(infra.Infra)
     get_event_by_id = providers.Factory(
         usecases.GetEventByIdUseCase,
-        event_repo=infra.event_repo,
+        event_query_repo=infra.event_query_repo,
     )
     get_events = providers.Factory(
         usecases.GetEventsUseCase,
-        event_repo=infra.event_repo,
+        event_query_repo=infra.event_query_repo,
     )
     create_event = providers.Factory(
         usecases.CreateEventUseCase,

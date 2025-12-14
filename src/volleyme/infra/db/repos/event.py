@@ -1,6 +1,8 @@
+import sqlalchemy.exc
 import sqlalchemy.orm
 
 from src.common import repos as common_repos
+from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, repos, types
 from src.volleyme.infra.db import models
 
@@ -17,10 +19,21 @@ class EventRepo(
         event = aggregates.Event(
             id=types.EventId(event_model.id),
             start_dt=event_model.start_dt,
+            end_dt=event_model.end_dt,
             title=event_model.title,
-            type=event_model.type,
+            game_type=event_model.game_type,
+            format_type=event_model.format_type,
+            country=event_model.country,
+            city=event_model.city,
+            address=event_model.address,
+            max_participants_count=event_model.max_participants_count,
+            participants=[
+                types.PlayerId(player.id) for player in event_model.participants
+            ],
+            hosts=[types.UserId(host.id) for host in event_model.hosts],
             description=event_model.description,
             price=event_model.price,
+            currency=event_model.currency,
             image_urls=event_model.image_urls,
             games=[],
         )
@@ -76,10 +89,17 @@ class EventRepo(
         event_model = models.Event(
             id=event.id,
             start_dt=event.start_dt,
+            end_dt=event.end_dt,
             title=event.title,
-            type=event.type,
+            game_type=event.game_type,
+            format_type=event.format_type,
+            country=event.country,
+            city=event.city,
+            address=event.address,
+            max_participants_count=event.max_participants_count,
             description=event.description,
             price=event.price,
+            currency=event.currency,
             image_urls=event.image_urls,
             created_at=event.created_at,
             updated_at=event.updated_at,
@@ -91,6 +111,8 @@ class EventRepo(
                     sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
                         models.Game.teams,
                     ),
+                    sqlalchemy.orm.joinedload(self._model_class.participants),
+                    sqlalchemy.orm.joinedload(self._model_class.hosts),
                 },
             )
         )
@@ -103,3 +125,138 @@ class EventRepo(
                 model_class=self._model_class,
             ),
         )
+
+
+class EventQueryRepo(
+    common_repos.SQLAlchemyIdModelRepo,
+    query_repos.EventQueryRepo,
+):
+    """Event query repository implementation."""
+
+    _model_class = models.Event
+
+    async def get_event_info(
+        self,
+        event_id: types.EventId,
+    ) -> dto.EventDetailsDto | None:
+        query = (
+            sqlalchemy.select(self._model_class)
+            .join(
+                models.EventParticipantRel,
+                onclause=self._model_class.id == models.EventParticipantRel.event_id,
+                isouter=True,
+            )
+            .group_by(self._model_class.id)
+            .where(self._model_class.id == event_id)
+            .options(
+                sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
+                    models.Game.teams,
+                ),
+                sqlalchemy.orm.joinedload(self._model_class.participants)
+                .selectinload(models.Player.user)
+                .selectinload(models.User.profile),
+                sqlalchemy.orm.joinedload(self._model_class.hosts).selectinload(
+                    models.User.profile,
+                ),
+                sqlalchemy.orm.with_expression(
+                    self._model_class.participants_count,
+                    sqlalchemy.func.count(models.EventParticipantRel.event_id),
+                ),
+            )
+        )
+        try:
+            result = await self._db_session.execute(query)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise common_repos.exc.QueryError(msg=str(error)) from error
+        event_model = result.unique().scalar_one_or_none()
+        if event_model:
+            return dto.EventDetailsDto(
+                id=event_model.id,
+                title=event_model.title,
+                start_dt=event_model.start_dt,
+                end_dt=event_model.end_dt,
+                city=event_model.city,
+                address=event_model.address,
+                participants_count=event_model.participants_count,
+                max_participants_count=event_model.max_participants_count,
+                price=event_model.price,
+                currency=event_model.currency,
+                description=event_model.description,
+                image_urls=event_model.image_urls,
+                country=event_model.country,
+                game_type=event_model.game_type,
+                format_type=event_model.format_type,
+                participants=[
+                    dto.ParticipantInfoDto(
+                        id=participant.id,
+                        avatar_url=(
+                            participant.user.profile.avatar_url
+                            if participant.user.profile
+                            else None
+                        ),
+                        name=(
+                            participant.user.profile.full_name
+                            if participant.user.profile
+                            else None
+                        ),
+                    )
+                    for participant in event_model.participants
+                ],
+                hosts=[
+                    dto.ParticipantInfoDto(
+                        id=host.id,
+                        avatar_url=host.profile.avatar_url if host.profile else None,
+                        name=host.profile.full_name if host.profile else None,
+                    )
+                    for host in event_model.hosts
+                ],
+            )
+
+    async def get_events_info(
+        self,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[dto.EventListDto]:
+        query = (
+            sqlalchemy.select(self._model_class)
+            .join_from(
+                self._model_class,
+                models.EventParticipantRel,
+                onclause=self._model_class.id == models.EventParticipantRel.event_id,
+            )
+            .group_by(self._model_class.id)
+            .limit(limit)
+            .offset(offset)
+            .options(
+                sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
+                    models.Game.teams,
+                ),
+                sqlalchemy.orm.joinedload(self._model_class.participants),
+                sqlalchemy.orm.joinedload(self._model_class.hosts),
+                sqlalchemy.orm.with_expression(
+                    self._model_class.participants_count,
+                    sqlalchemy.func.count(models.EventParticipantRel.event_id),
+                ),
+            )
+        )
+        try:
+            result = await self._db_session.execute(query)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise common_repos.exc.QueryError(msg=str(error)) from error
+        event_models_list = result.unique().scalars().all()
+        return [
+            dto.EventListDto(
+                id=event_model.id,
+                title=event_model.title,
+                start_dt=event_model.start_dt,
+                city=event_model.city,
+                address=event_model.address,
+                price=event_model.price,
+                participants_count=event_model.participants_count,
+                image_urls=event_model.image_urls,
+                country=event_model.country,
+                currency=event_model.currency,
+                game_type=event_model.game_type,
+            )
+            for event_model in event_models_list
+        ]

@@ -25,3 +25,15 @@ class Infra(containers.DeclarativeContainer):
         repos.EventRepo,
         db_session=db_session,
     )
+    event_query_repo = providers.Factory(
+        repos.EventQueryRepo,
+        db_session=db_session,
+    )
+    player_repo = providers.Factory(
+        repos.PlayerRepo,
+        db_session=db_session,
+    )
+    user_repo = providers.Factory(
+        repos.UserRepo,
+        db_session=db_session,
+    )

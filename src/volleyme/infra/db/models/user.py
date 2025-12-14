@@ -8,6 +8,7 @@ import sqlalchemy.orm
 from src.common.models import base as base_models
 
 if typing.TYPE_CHECKING:
+    from .event import Event, EventHostRel
     from .profile import Profile
 
 
@@ -24,7 +25,19 @@ class User(
     password: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Text,
     )
-    profile: sqlalchemy.orm.Mapped[Profile] = sqlalchemy.orm.relationship(
+    profile: sqlalchemy.orm.Mapped[Profile | None] = sqlalchemy.orm.relationship(
         "Profile",
         back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    hosted_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
+        "Event",
+        secondary="event_host_rel",
+        back_populates="hosts",
+    )
+    hosted_events_rel: sqlalchemy.orm.Mapped[list[EventHostRel]] = (
+        sqlalchemy.orm.relationship(
+            "EventHostRel",
+            back_populates="user",
+        )
     )

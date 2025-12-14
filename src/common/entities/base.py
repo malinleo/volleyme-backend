@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 import pydantic
@@ -8,6 +9,17 @@ class BaseEntity(pydantic.BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TimeStampedEntity(BaseEntity):
+    """Base class for domain entities with create and update timestamps."""
+
+    created_at: datetime.datetime = pydantic.Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
+    updated_at: datetime.datetime = pydantic.Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
 
 class AggregateRoot(BaseEntity):

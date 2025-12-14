@@ -33,7 +33,11 @@ class UserRepo(
         return user
 
     async def get_user(self, user_id: types.UserId) -> aggregates.User | None:
-        user_model = await self._try_get_one(model_class=self._model_class, id=user_id)
+        user_model = await self._try_get_one(
+            id=user_id,
+            model_class=self._model_class,
+            load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
+        )
         if user_model:
             return self._parse_user_model(user_model)
 
@@ -46,6 +50,23 @@ class UserRepo(
                 order_by=(),
                 limit=limit,
                 offset=offset,
+                load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
+            )
+        ]
+
+    async def get_users_by_ids(
+        self,
+        user_ids: list[types.UserId],
+    ) -> list[aggregates.User]:
+        if not user_ids:
+            return []
+        return [
+            self._parse_user_model(user_model)
+            for user_model in await self._get_many(
+                model_class=self._model_class,
+                where=(self._model_class.id.in_(user_ids),),
+                order_by=(),
+                load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
             )
         ]
 

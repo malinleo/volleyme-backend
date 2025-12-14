@@ -40,6 +40,21 @@ class PlayerRepo(
             )
         ]
 
+    async def get_players_by_ids(
+        self,
+        player_ids: list[types.PlayerId],
+    ) -> list[aggregates.Player]:
+        if not player_ids:
+            return []
+        return [
+            self._parse_player_model(player_model)
+            for player_model in await self._get_many(
+                model_class=self._model_class,
+                where=(self._model_class.id.in_(player_ids),),
+                order_by=(),
+            )
+        ]
+
     async def save_player(self, player: aggregates.Player) -> aggregates.Player:
         player_model = models.Player(
             id=player.id,
