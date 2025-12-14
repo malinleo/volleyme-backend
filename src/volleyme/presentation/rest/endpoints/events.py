@@ -30,12 +30,13 @@ async def get_events(
         usecases.GetEventsUseCase,
         fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.get_events]]),
     ],
+    user_id: uuid.UUID,
     limit: int = fastapi.Query(default=25, ge=1, le=100),
     offset: int = fastapi.Query(default=0, ge=0),
 ):
     return [
         schemas.EventListResponse.model_validate(event)
-        for event in await usecase.execute(limit, offset)
+        for event in await usecase.execute(user_id, limit, offset)
     ]
 
 

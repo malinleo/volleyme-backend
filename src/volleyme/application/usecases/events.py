@@ -24,8 +24,17 @@ class GetEventByIdUseCase:
 class GetEventsUseCase:
     event_query_repo: query_repos.EventQueryRepo
 
-    async def execute(self, limit: int, offset: int) -> list[dto.EventListDto]:
-        return await self.event_query_repo.get_events_info(limit, offset)
+    async def execute(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        offset: int,
+    ) -> list[dto.EventListDto]:
+        return await self.event_query_repo.get_events_info_for_user(
+            types.UserId(user_id),
+            limit,
+            offset,
+        )
 
 
 @dataclasses.dataclass(frozen=True)

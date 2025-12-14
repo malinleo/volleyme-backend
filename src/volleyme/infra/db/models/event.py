@@ -92,6 +92,9 @@ class Event(
     )
 
     participants_count: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.query_expression()  # type: ignore
+    my_role: sqlalchemy.orm.Mapped[enums.EventParticipantRole] = (
+        sqlalchemy.orm.query_expression()
+    )  # type: ignore
 
 
 class EventParticipantRel(base_models.BaseModel):

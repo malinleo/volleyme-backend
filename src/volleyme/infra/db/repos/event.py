@@ -3,7 +3,7 @@ import sqlalchemy.orm
 
 from src.common import repos as common_repos
 from src.volleyme.application import dto, query_repos
-from src.volleyme.domain import aggregates, repos, types
+from src.volleyme.domain import aggregates, enums, repos, types
 from src.volleyme.infra.db import models
 
 
@@ -212,8 +212,9 @@ class EventQueryRepo(
                 ],
             )
 
-    async def get_events_info(
+    async def get_events_info_for_user(
         self,
+        user_id: types.UserId,
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[dto.EventListDto]:
@@ -237,6 +238,22 @@ class EventQueryRepo(
                     self._model_class.participants_count,
                     sqlalchemy.func.count(models.EventParticipantRel.event_id),
                 ),
+                sqlalchemy.orm.with_expression(
+                    self._model_class.my_role,
+                    sqlalchemy.case(
+                        (
+                            self._model_class.participants.any(
+                                models.Player.user_id == user_id
+                            ),
+                            enums.EventParticipantRole.PARTICIPANT.value,
+                        ),
+                        (
+                            self._model_class.hosts.any(models.User.id == user_id),
+                            enums.EventParticipantRole.HOST.value,
+                        ),
+                        else_=enums.EventParticipantRole.NOBODY.value,
+                    ),
+                ),
             )
         )
         try:
@@ -253,6 +270,7 @@ class EventQueryRepo(
                 address=event_model.address,
                 price=event_model.price,
                 participants_count=event_model.participants_count,
+                my_role=event_model.my_role,
                 image_urls=event_model.image_urls,
                 country=event_model.country,
                 currency=event_model.currency,

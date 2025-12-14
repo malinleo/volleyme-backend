@@ -14,8 +14,9 @@ class EventQueryRepo(typing.Protocol):
         """Get event info by id."""
         ...
 
-    async def get_events_info(
+    async def get_events_info_for_user(
         self,
+        user_id: types.UserId,
         limit: int,
         offset: int,
     ) -> list[dto.EventListDto]:

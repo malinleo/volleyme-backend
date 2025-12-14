@@ -43,6 +43,7 @@ class EventListResponse(schemas.BaseSchema):
     address: str
     price: decimal.Decimal
     participants_count: int
+    my_role: enums.EventParticipantRole
 
     image_urls: list[str]
     country: str
