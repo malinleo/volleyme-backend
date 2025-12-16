@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-RUN apt update
+RUN apt update && apt install -y gcc
 
 ENV HOST=0.0.0.0
 ENV PORT=8000
