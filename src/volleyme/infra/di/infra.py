@@ -3,6 +3,7 @@ from dependency_injector import containers, providers
 
 from src.common import models as common_models
 from src.config import settings
+from src.volleyme.infra import services
 from src.volleyme.infra.db import repos
 
 
@@ -21,19 +22,27 @@ class Infra(containers.DeclarativeContainer):
         common_models.get_db_session,
         async_session_factory=async_session_factory,
     )
-    event_repo = providers.Factory(
-        repos.EventRepo,
-        db_session=db_session,
+    jwt_codec = providers.Factory(
+        services.JWTCodecService,
+        public_key=settings.jwt_public_key,
+        private_key=settings.jwt_private_key,
+        algorithm=settings.JWT_ALGORITHM,
     )
-    event_query_repo = providers.Factory(
-        repos.EventQueryRepo,
-        db_session=db_session,
+    auth_strategy = providers.Factory(
+        services.JWTAuthStrategy,
+        token_service=jwt_codec,
     )
-    player_repo = providers.Factory(
-        repos.PlayerRepo,
-        db_session=db_session,
+    user_query_repo = providers.Factory(repos.UserQueryRepo, db_session=db_session)
+    login_auth_strategy = providers.Factory(
+        services.EmailPasswordAuthStrategy,
+        user_query_repo=user_query_repo,
     )
-    user_repo = providers.Factory(
-        repos.UserRepo,
-        db_session=db_session,
+    generate_auth_token_strategy = providers.Factory(
+        services.JWTAuthTokenStrategy,
+        token_service=jwt_codec,
+        expires_in=settings.JWT_EXPIRES_IN,
     )
+    event_repo = providers.Factory(repos.EventRepo, db_session=db_session)
+    event_query_repo = providers.Factory(repos.EventQueryRepo, db_session=db_session)
+    player_repo = providers.Factory(repos.PlayerRepo, db_session=db_session)
+    user_repo = providers.Factory(repos.UserRepo, db_session=db_session)

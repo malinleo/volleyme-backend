@@ -7,11 +7,12 @@ from src.volleyme.domain import types
 class EventQueryRepo(typing.Protocol):
     """Event repository protocol."""
 
-    async def get_event_info(
+    async def get_event_info_for_user(
         self,
         event_id: types.EventId,
+        user_id: types.UserId,
     ) -> dto.EventDetailsDto | None:
-        """Get event info by id."""
+        """Get event info for user by id."""
         ...
 
     async def get_events_info_for_user(

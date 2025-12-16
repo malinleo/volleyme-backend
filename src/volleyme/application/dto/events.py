@@ -55,6 +55,7 @@ class EventDetailsDto(dto.BaseDto):
     address: str = pydantic.Field(max_length=1024)
     participants_count: int
     max_participants_count: int = pydantic.Field(gt=0)
+    my_role: enums.EventParticipantRole
     price: decimal.Decimal = pydantic.Field(ge=0)
     currency: str = pydantic.Field(max_length=3)
     description: str

@@ -68,7 +68,7 @@ class PlayerRepo(
         return await self._delete(
             model_class=self._model_class,
             where=self._build_model_ident_expressions(
-                id=player_id,
+                id=(player_id,),
                 model_class=self._model_class,
             ),
         )

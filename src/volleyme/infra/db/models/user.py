@@ -8,7 +8,7 @@ import sqlalchemy.orm
 from src.common.models import base as base_models
 
 if typing.TYPE_CHECKING:
-    from .event import Event, EventHostRel
+    from .event import Event, EventHostRel, EventParticipantRel
     from .profile import Profile
 
 
@@ -30,6 +30,19 @@ class User(
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    participated_events: sqlalchemy.orm.Mapped[list[Event]] = (
+        sqlalchemy.orm.relationship(
+            "Event",
+            secondary="event_participant_rel",
+            back_populates="participants",
+        )
+    )
+    participated_events_rel: sqlalchemy.orm.Mapped[list[EventParticipantRel]] = (
+        sqlalchemy.orm.relationship(
+            "EventParticipantRel",
+            back_populates="user",
+        )
+    )
     hosted_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
         "Event",
         secondary="event_host_rel",
@@ -40,4 +53,14 @@ class User(
             "EventHostRel",
             back_populates="user",
         )
+    )
+    created_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
+        "Event",
+        back_populates="created_by",
+        foreign_keys="Event.created_by_id",
+    )
+    updated_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
+        "Event",
+        back_populates="updated_by",
+        foreign_keys="Event.updated_by_id",
     )

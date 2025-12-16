@@ -10,3 +10,6 @@ from .events import (
 from .events import (
     ParticipantInfoDto as ParticipantInfoDto,
 )
+from .user import (
+    UserAuthDto as UserAuthDto,
+)

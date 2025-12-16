@@ -1,9 +1,4 @@
-from .events import (
-    CreateEventUseCase as CreateEventUseCase,
-)
-from .events import (
-    GetEventByIdUseCase as GetEventByIdUseCase,
-)
-from .events import (
-    GetEventsUseCase as GetEventsUseCase,
-)
+from .auth import AuthUseCase as AuthUseCase
+from .events import CreateEventUseCase as CreateEventUseCase
+from .events import GetEventByIdUseCase as GetEventByIdUseCase
+from .events import GetEventsUseCase as GetEventsUseCase

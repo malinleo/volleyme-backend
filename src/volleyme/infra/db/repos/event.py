@@ -28,7 +28,7 @@ class EventRepo(
             address=event_model.address,
             max_participants_count=event_model.max_participants_count,
             participants=[
-                types.PlayerId(player.id) for player in event_model.participants
+                types.UserId(participant.id) for participant in event_model.participants
             ],
             hosts=[types.UserId(host.id) for host in event_model.hosts],
             description=event_model.description,
@@ -103,8 +103,10 @@ class EventRepo(
             image_urls=event.image_urls,
             created_at=event.created_at,
             updated_at=event.updated_at,
+            created_by_id=event.created_by,
+            updated_by_id=event.updated_by,
         )
-        return self._parse_event_model(
+        saved_event = self._parse_event_model(
             await self._save(
                 event_model,
                 load_configs={
@@ -116,12 +118,23 @@ class EventRepo(
                 },
             )
         )
+        participants_rels = [
+            models.EventParticipantRel(event_id=event_model.id, user_id=participant)
+            for participant in event.participants
+        ]
+        hosts_rels = [
+            models.EventHostRel(event_id=event_model.id, user_id=host)
+            for host in event.hosts
+        ]
+        await self._bulk_save(participants_rels)
+        await self._bulk_save(hosts_rels)
+        return saved_event
 
     async def delete_event(self, event_id: types.EventId) -> None:
         return await self._delete(
             model_class=self._model_class,
             where=self._build_model_ident_expressions(
-                id=event_id,
+                id=(event_id,),
                 model_class=self._model_class,
             ),
         )
@@ -135,9 +148,10 @@ class EventQueryRepo(
 
     _model_class = models.Event
 
-    async def get_event_info(
+    async def get_event_info_for_user(
         self,
         event_id: types.EventId,
+        user_id: types.UserId,
     ) -> dto.EventDetailsDto | None:
         query = (
             sqlalchemy.select(self._model_class)
@@ -152,15 +166,31 @@ class EventQueryRepo(
                 sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
                     models.Game.teams,
                 ),
-                sqlalchemy.orm.joinedload(self._model_class.participants)
-                .selectinload(models.Player.user)
-                .selectinload(models.User.profile),
+                sqlalchemy.orm.joinedload(self._model_class.participants).selectinload(
+                    models.User.profile,
+                ),
                 sqlalchemy.orm.joinedload(self._model_class.hosts).selectinload(
                     models.User.profile,
                 ),
                 sqlalchemy.orm.with_expression(
                     self._model_class.participants_count,
                     sqlalchemy.func.count(models.EventParticipantRel.event_id),
+                ),
+                sqlalchemy.orm.with_expression(
+                    self._model_class.my_role,
+                    sqlalchemy.case(
+                        (
+                            self._model_class.hosts.any(models.User.id == user_id),
+                            enums.EventParticipantRole.HOST.value,
+                        ),
+                        (
+                            self._model_class.participants.any(
+                                models.User.id == user_id
+                            ),
+                            enums.EventParticipantRole.PARTICIPANT.value,
+                        ),
+                        else_=enums.EventParticipantRole.NOBODY.value,
+                    ),
                 ),
             )
         )
@@ -179,6 +209,7 @@ class EventQueryRepo(
                 address=event_model.address,
                 participants_count=event_model.participants_count,
                 max_participants_count=event_model.max_participants_count,
+                my_role=event_model.my_role,
                 price=event_model.price,
                 currency=event_model.currency,
                 description=event_model.description,
@@ -190,13 +221,15 @@ class EventQueryRepo(
                     dto.ParticipantInfoDto(
                         id=participant.id,
                         avatar_url=(
-                            participant.user.profile.avatar_url
-                            if participant.user.profile
+                            participant.profile.avatar_url
+                            if participant.profile
+                            else None
+                            if participant.profile
                             else None
                         ),
                         name=(
-                            participant.user.profile.full_name
-                            if participant.user.profile
+                            participant.profile.full_name
+                            if participant.profile
                             else None
                         ),
                     )
@@ -242,14 +275,14 @@ class EventQueryRepo(
                     self._model_class.my_role,
                     sqlalchemy.case(
                         (
-                            self._model_class.participants.any(
-                                models.Player.user_id == user_id
-                            ),
-                            enums.EventParticipantRole.PARTICIPANT.value,
-                        ),
-                        (
                             self._model_class.hosts.any(models.User.id == user_id),
                             enums.EventParticipantRole.HOST.value,
+                        ),
+                        (
+                            self._model_class.participants.any(
+                                models.User.id == user_id
+                            ),
+                            enums.EventParticipantRole.PARTICIPANT.value,
                         ),
                         else_=enums.EventParticipantRole.NOBODY.value,
                     ),

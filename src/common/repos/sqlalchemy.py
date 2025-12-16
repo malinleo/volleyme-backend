@@ -25,17 +25,23 @@ class SQLAlchemyModelRepo(
         self._db_session = db_session
 
     @staticmethod
-    @abc.abstractmethod
-    async def _get_id(instance: models.BaseModel) -> IdDataT:
+    # @abc.abstractmethod
+    async def _get_id(instance: models.BaseModel) -> tuple[typing.Any, ...]:
         """Retrieve id from instance."""
+        primary_key_fields = instance.__table__.primary_key
+        return tuple(getattr(instance, field.name) for field in primary_key_fields)
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def _build_model_ident_expressions(
         self,
-        id: IdDataT,
+        id: tuple[typing.Any, ...],
         model_class: type[ModelT],
     ) -> collections.abc.Sequence[sqlalchemy.ColumnExpressionArgument[typing.Any]]:
         """Build set of expressions for where clause that identify instance."""
+        primary_key_fields = model_class.__table__.primary_key
+        return tuple(
+            field == id_value for field, id_value in zip(primary_key_fields, id)
+        )
 
     async def _run_select(
         self,
@@ -65,7 +71,7 @@ class SQLAlchemyModelRepo(
         try:
             return await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise exc.QueryError from error
+            raise exc.QueryError(msg=str(error)) from error
 
     async def _try_get_one(
         self,
@@ -78,7 +84,10 @@ class SQLAlchemyModelRepo(
         """Get one instance by or `None`."""
         result = await self._run_select(
             model_class=model_class,
-            where=self._build_model_ident_expressions(id=id, model_class=model_class),
+            where=self._build_model_ident_expressions(
+                id=(id,),
+                model_class=model_class,
+            ),
             load_configs=load_configs,
         )
         return result.unique().scalar_one_or_none()
@@ -180,16 +189,16 @@ class SQLAlchemyModelRepo(
             raise exc.SaveError(
                 msg=f"Object save error:\n{error}",
             ) from error
-        where_exprs = (
-            self._build_model_ident_expressions(
+        where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = []
+        for instance in instances:
+            exprs = self._build_model_ident_expressions(
                 id=await self._get_id(instance=instance),
                 model_class=model_class,
             )
-            for instance in instances
-        )
+            where_exprs.extend(exprs)
         return await self._get_many(
             model_class=model_class,
-            where=tuple(*sqlalchemy.and_(*where_exprs)),
+            where=where_exprs,
             order_by=(),
             load_configs=load_configs,
         )
@@ -228,14 +237,3 @@ IdModelT = typing.TypeVar("IdModelT", bound=models.IDModel)
 
 class SQLAlchemyIdModelRepo(SQLAlchemyModelRepo[uuid.UUID]):
     """Base repo class for default id models."""
-
-    @staticmethod
-    async def _get_id(instance: models.IDModel) -> uuid.UUID:
-        return instance.id
-
-    def _build_model_ident_expressions(
-        self,
-        id: uuid.UUID,
-        model_class: type[models.IDModel],
-    ) -> collections.abc.Sequence[sqlalchemy.ColumnExpressionArgument[typing.Any]]:
-        return (model_class.id == id,)

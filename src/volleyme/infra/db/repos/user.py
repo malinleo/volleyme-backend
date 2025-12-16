@@ -1,6 +1,8 @@
+import sqlalchemy.exc
 import sqlalchemy.orm
 
 from src.common import repos as common_repos
+from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, repos, types
 from src.volleyme.infra.db import models
 
@@ -93,7 +95,33 @@ class UserRepo(
         return await self._delete(
             model_class=self._model_class,
             where=self._build_model_ident_expressions(
-                id=user_id,
+                id=(user_id,),
                 model_class=self._model_class,
             ),
         )
+
+
+class UserQueryRepo(
+    common_repos.SQLAlchemyIdModelRepo,
+    query_repos.UserQueryRepo,
+):
+    """User query repository implementation."""
+
+    _model_class = models.User
+
+    async def get_user_auth_info(self, email: str) -> dto.UserAuthDto | None:
+        query = sqlalchemy.select(self._model_class).where(
+            self._model_class.email == email,
+        )
+        try:
+            result = await self._db_session.execute(query)
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise common_repos.exc.QueryError(msg=str(error)) from error
+        user_model = result.unique().scalar_one_or_none()
+        if user_model:
+            return dto.UserAuthDto(
+                id=types.UserId(user_model.id),
+                email=user_model.email,
+                password=user_model.password,
+            )
+        return None

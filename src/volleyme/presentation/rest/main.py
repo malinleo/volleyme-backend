@@ -6,11 +6,12 @@ from src.volleyme.infra.di import DI
 from src.volleyme.presentation.rest import endpoints, exc_handlers
 
 container = DI()
-container.wire(modules=[__name__, endpoints.events])
+container.wire(modules=[__name__, endpoints.events, endpoints.auth])
 
 app = fastapi.FastAPI(debug=settings.DEBUG)
 
 app.include_router(endpoints.events_router)
+app.include_router(endpoints.auth_router)
 app.exception_handler(usecases.exc.UseCaseError)(exc_handlers.handle_use_case_error)
 app.exception_handler(usecases.exc.NotFound)(exc_handlers.handle_not_found_error)
 app.exception_handler(usecases.exc.Unauthorized)(exc_handlers.handle_unauthorized_error)

@@ -5,7 +5,11 @@ from . import infra, usecases
 
 class DI(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
-        modules=["src.volleyme.presentation.rest.endpoints"],
+        modules=[
+            "src.volleyme.presentation.rest.endpoints",
+            "src.volleyme.presentation.rest.deps",
+        ],
     )
+    container = providers.Self()
     usecases = providers.Container(usecases.Usecases)
-    infrastructure = providers.Container(infra.Infra)
+    infra = providers.Container(infra.Infra)

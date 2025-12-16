@@ -18,4 +18,13 @@ class Usecases(containers.DeclarativeContainer):
     create_event = providers.Factory(
         usecases.CreateEventUseCase,
         event_repo=infra.event_repo,
+        event_query_repo=infra.event_query_repo,
+    )
+    authenticate = providers.Factory(
+        usecases.AuthUseCase,
+        auth_strategy=infra.auth_strategy,
+    )
+    login_factory = providers.Factory(
+        usecases.AuthUseCase,
+        auth_strategy=infra.login_auth_strategy,
     )

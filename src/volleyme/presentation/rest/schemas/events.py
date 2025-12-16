@@ -17,6 +17,7 @@ class EventDetailResponse(schemas.BaseSchema):
     address: str = pydantic.Field(max_length=1024)
     participants_count: int
     max_participants_count: int = pydantic.Field(gt=0)
+    my_role: enums.EventParticipantRole
     price: decimal.Decimal = pydantic.Field(ge=0)
     currency: str = pydantic.Field(max_length=3)
     description: str
@@ -31,8 +32,8 @@ class EventDetailResponse(schemas.BaseSchema):
 
 class EventParticipantResponse(schemas.BaseSchema):
     id: uuid.UUID
-    avatar_url: str
-    name: str
+    avatar_url: str | None
+    name: str | None
 
 
 class EventListResponse(schemas.BaseSchema):

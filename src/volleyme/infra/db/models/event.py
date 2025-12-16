@@ -12,7 +12,6 @@ from src.volleyme.domain import enums
 
 if typing.TYPE_CHECKING:
     from .game import Game
-    from .player import Player
     from .user import User
 
 
@@ -52,10 +51,10 @@ class Event(
         sqlalchemy.Integer,
         default=0,
     )
-    participants: sqlalchemy.orm.Mapped[list[Player]] = sqlalchemy.orm.relationship(
-        "Player",
+    participants: sqlalchemy.orm.Mapped[list[User]] = sqlalchemy.orm.relationship(
+        "User",
         secondary="event_participant_rel",
-        back_populates="events",
+        back_populates="participated_events",
     )
     participants_rel: sqlalchemy.orm.Mapped[list[EventParticipantRel]] = (
         sqlalchemy.orm.relationship(
@@ -90,6 +89,22 @@ class Event(
         "Game",
         back_populates="event",
     )
+    created_by_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.ForeignKey("user.id"),
+    )
+    updated_by_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.ForeignKey("user.id"),
+    )
+    created_by: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
+        "User",
+        back_populates="created_events",
+        foreign_keys=[created_by_id],
+    )
+    updated_by: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
+        "User",
+        back_populates="updated_events",
+        foreign_keys=[updated_by_id],
+    )
 
     participants_count: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.query_expression()  # type: ignore
     my_role: sqlalchemy.orm.Mapped[enums.EventParticipantRole] = (
@@ -99,6 +114,13 @@ class Event(
 
 class EventParticipantRel(base_models.BaseModel):
     __tablename__ = "event_participant_rel"
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint(
+            "event_id",
+            "user_id",
+            name="unique_event_participant_pair",
+        ),
+    )
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey("event.id"),
@@ -108,18 +130,25 @@ class EventParticipantRel(base_models.BaseModel):
         "Event",
         back_populates="participants_rel",
     )
-    player_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("player.id"),
+    user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.ForeignKey("user.id"),
         primary_key=True,
     )
-    player: sqlalchemy.orm.Mapped[Player] = sqlalchemy.orm.relationship(
-        "Player",
-        back_populates="events_rel",
+    user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
+        "User",
+        back_populates="participated_events_rel",
     )
 
 
 class EventHostRel(base_models.BaseModel):
     __tablename__ = "event_host_rel"
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint(
+            "event_id",
+            "user_id",
+            name="unique_event_host_pair",
+        ),
+    )
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey("event.id"),

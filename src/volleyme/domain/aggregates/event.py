@@ -36,7 +36,7 @@ class Event(
     max_participants_count: int = pydantic.Field(gt=0)
     image_urls: list[str]
     games: list[Game]
-    participants: list[types.PlayerId]
+    participants: list[types.UserId]
     hosts: list[types.UserId]
 
     @property

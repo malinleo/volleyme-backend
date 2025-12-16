@@ -20,6 +20,12 @@ class BaseError(Exception):
     default_msg: str = "Error occurred"
     code = ErrorCode.DEFAULT
 
-    def __init__(self, msg: str | None = None, *args: object) -> None:
+    def __init__(
+        self,
+        msg: str | None = None,
+        code: str | None = None,
+        *args: object,
+    ) -> None:
         self.msg = msg or self.default_msg
+        self.code = code or self.code
         super().__init__(self.msg, *args)
