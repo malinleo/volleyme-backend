@@ -15,7 +15,7 @@ COPY ./pyproject.toml ./poetry.lock ./docker-entrypoint.sh /src/
 # Install deps with poetry
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \
-    poetry install --no-root --no-interaction --no-ansi
+    poetry install --no-root --no-interaction --no-ansi --without dev,tests,linters
 
 COPY . /src
 

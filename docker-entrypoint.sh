@@ -1,3 +1,3 @@
 #!/bin/bash
 
-uvicorn src.volleyme.main:app --host ${HOST} --port ${PORT} --reload
+uvicorn src.volleyme.presentation.rest.main:app --host ${HOST} --port ${PORT} --reload
