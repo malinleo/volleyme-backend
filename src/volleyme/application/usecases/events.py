@@ -2,6 +2,7 @@ import dataclasses
 import datetime
 import uuid
 
+from src.common import exc as common_exc
 from src.common import repos as common_repos
 from src.common import usecases
 from src.volleyme.application import dto, query_repos
@@ -22,7 +23,11 @@ class GetEventByIdUseCase:
             types.UserId(user_id),
         ):
             return event_info
-        raise usecases.exc.NotFound(msg=f"Event with id {event_id} not found")
+        raise usecases.exc.NotFound(
+            details=[
+                common_exc.ErrorDetail(message=f"Event with id {event_id} not found"),
+            ],
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -77,7 +82,11 @@ class CreateEventUseCase:
             )
         except common_repos.exc.RepoError as e:
             raise usecases.exc.UseCaseError(
-                msg="Failed to create event, reason: " + str(e)
+                details=[
+                    common_exc.ErrorDetail(
+                        message=f"Failed to create event, reason: {e}"
+                    ),
+                ],
             ) from e
         event_info = await self.event_query_repo.get_event_info_for_user(
             types.EventId(event_aggregate.id),
@@ -85,6 +94,10 @@ class CreateEventUseCase:
         )
         if not event_info:
             raise usecases.exc.NotFound(
-                msg=f"Event with id {event_aggregate.id} not found"
+                details=[
+                    common_exc.ErrorDetail(
+                        message=f"Event with id {event_aggregate.id} not found",
+                    ),
+                ],
             )
         return event_info

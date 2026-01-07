@@ -1,3 +1,5 @@
+import string
+
 import sqlalchemy.ext.asyncio
 from dependency_injector import containers, providers
 
@@ -46,3 +48,30 @@ class Infra(containers.DeclarativeContainer):
     event_query_repo = providers.Factory(repos.EventQueryRepo, db_session=db_session)
     player_repo = providers.Factory(repos.PlayerRepo, db_session=db_session)
     user_repo = providers.Factory(repos.UserRepo, db_session=db_session)
+    password_validator = providers.Factory(
+        services.password.PasswordValidator,
+        policies=[
+            services.password.MinLength(min_length=settings.PASSWORD_MIN_LENGTH),
+            services.password.MaxLength(max_length=settings.PASSWORD_MAX_LENGTH),
+            services.password.ContainsChars(
+                chars=set(string.ascii_uppercase),
+                chars_type_name="uppercase letter",
+                error_code="no_uppercase",
+            ),
+            services.password.ContainsChars(
+                chars=set(string.ascii_lowercase),
+                chars_type_name="lowercase letter",
+                error_code="no_lowercase",
+            ),
+            services.password.ContainsChars(
+                chars=set(string.digits),
+                chars_type_name="digit",
+                error_code="no_digit",
+            ),
+            services.password.ContainsChars(
+                chars=set(string.punctuation),
+                chars_type_name="special character",
+                error_code="no_special",
+            ),
+        ],
+    )

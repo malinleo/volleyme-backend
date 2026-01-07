@@ -1,6 +1,7 @@
 import sqlalchemy.exc
 import sqlalchemy.orm
 
+from src.common import exc as common_exc
 from src.common import repos as common_repos
 from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, repos, types
@@ -19,7 +20,7 @@ class UserRepo(
         user = aggregates.User(
             id=types.UserId(user_model.id),
             email=user_model.email,
-            password=user_model.password,
+            password_hash=aggregates.PasswordHash(value=user_model.password),
             created_at=user_model.created_at,
             updated_at=user_model.updated_at,
         )
@@ -76,7 +77,7 @@ class UserRepo(
         user_model = models.User(
             id=user.id,
             email=user.email,
-            password=user.password,
+            password=user.password_hash.value,
         )
         if user.profile:
             user_model.profile = models.Profile(
@@ -116,7 +117,9 @@ class UserQueryRepo(
         try:
             result = await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(msg=str(error)) from error
+            raise common_repos.exc.QueryError(
+                details=[common_exc.ErrorDetail(message=str(error))],
+            ) from error
         user_model = result.unique().scalar_one_or_none()
         if user_model:
             return dto.UserAuthDto(

@@ -1,36 +1,34 @@
 import datetime
 import typing
 
-import pydantic
+import attrs
 
 
-class BaseEntity(pydantic.BaseModel):
+@attrs.define(kw_only=True)
+class BaseEntity:
     """Base class for domain entities."""
 
-    class Config:
-        from_attributes = True
 
-
+@attrs.define(kw_only=True)
 class TimeStampedEntity(BaseEntity):
     """Base class for domain entities with create and update timestamps."""
 
-    created_at: datetime.datetime = pydantic.Field(
-        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    created_at: datetime.datetime = attrs.field(
+        factory=lambda: datetime.datetime.now(datetime.UTC)
     )
-    updated_at: datetime.datetime = pydantic.Field(
-        default_factory=lambda: datetime.datetime.now(datetime.UTC)
+    updated_at: datetime.datetime = attrs.field(
+        factory=lambda: datetime.datetime.now(datetime.UTC)
     )
 
 
+@attrs.define(kw_only=True)
 class AggregateRoot(BaseEntity):
     """Base class for domain aggregate roots."""
 
 
-class ValueObject(pydantic.BaseModel):
+@attrs.define(kw_only=True)
+class ValueObject:
     """Base class for domain value objects."""
-
-    class Config:
-        from_attributes = True
 
 
 BaseEntityT = typing.TypeVar("BaseEntityT", bound=BaseEntity)

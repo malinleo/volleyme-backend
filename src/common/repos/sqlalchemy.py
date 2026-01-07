@@ -7,6 +7,7 @@ import sqlalchemy.exc
 import sqlalchemy.ext.asyncio
 import sqlalchemy.orm.strategy_options
 
+from src.common import exc as common_exc
 from src.common import models
 
 from . import exc
@@ -71,7 +72,9 @@ class SQLAlchemyModelRepo(
         try:
             return await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise exc.QueryError(msg=str(error)) from error
+            raise exc.QueryError(
+                details=[common_exc.ErrorDetail(message=str(error))],
+            ) from error
 
     async def _try_get_one(
         self,
@@ -113,7 +116,7 @@ class SQLAlchemyModelRepo(
         ):
             return instance
         raise exc.NotFoundError(
-            msg=f"Object with {id=} wasn't found",
+            details=[common_exc.ErrorDetail(message=f"Object with {id=} wasn't found")],
         )
 
     async def _get_many(
@@ -156,7 +159,9 @@ class SQLAlchemyModelRepo(
             await self._db_session.flush()
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"Object save error:\n{error}",
+                details=[
+                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
+                ],
             ) from error
         instance = (
             await self._get_many(
@@ -187,7 +192,9 @@ class SQLAlchemyModelRepo(
             await self._db_session.flush()
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"Object save error:\n{error}",
+                details=[
+                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
+                ],
             ) from error
         where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = []
         for instance in instances:
@@ -216,7 +223,9 @@ class SQLAlchemyModelRepo(
             await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
             raise exc.SaveError(
-                msg=f"Object save error:\n{error}",
+                details=[
+                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
+                ],
             ) from error
 
     async def _delete_instance(

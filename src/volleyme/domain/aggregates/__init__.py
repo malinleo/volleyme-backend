@@ -11,6 +11,9 @@ from .player import (
     Player as Player,
 )
 from .user import (
+    PasswordHash as PasswordHash,
+)
+from .user import (
     Profile as Profile,
 )
 from .user import (
