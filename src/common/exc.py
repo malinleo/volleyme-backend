@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import typing
 
 
 class ErrorCode(enum.StrEnum):
@@ -14,6 +15,11 @@ class ErrorCode(enum.StrEnum):
     REPO_QUERY = "__REPO_QUERY_ERROR__"
 
 
+class ErrorDetail(typing.NamedTuple):
+    message: str
+    code: str | None = None
+
+
 class BaseError(Exception):
     """Base error with message."""
 
@@ -22,10 +28,16 @@ class BaseError(Exception):
 
     def __init__(
         self,
-        msg: str | None = None,
+        details: list[ErrorDetail] | None = None,
         code: str | None = None,
         *args: object,
     ) -> None:
-        self.msg = msg or self.default_msg
-        self.code = code or self.code
-        super().__init__(self.msg, *args)
+        if not details:
+            details = [ErrorDetail(message=self.default_msg, code=code or self.code)]
+        self.details = details
+        super().__init__(self.details, *args)
+
+    def build_details(self) -> list[dict[str, typing.Any]]:
+        return [
+            {"message": detail.message, "code": detail.code} for detail in self.details
+        ]

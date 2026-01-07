@@ -2,6 +2,9 @@ from .auth import (
     AuthError as AuthError,
 )
 from .auth import (
+    AuthErrorCode as AuthErrorCode,
+)
+from .auth import (
     AuthStrategy as AuthStrategy,
 )
 from .auth import (

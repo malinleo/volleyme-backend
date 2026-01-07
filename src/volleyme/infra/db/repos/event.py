@@ -1,6 +1,7 @@
 import sqlalchemy.exc
 import sqlalchemy.orm
 
+from src.common import exc as common_exc
 from src.common import repos as common_repos
 from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, enums, repos, types
@@ -197,7 +198,9 @@ class EventQueryRepo(
         try:
             result = await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(msg=str(error)) from error
+            raise common_repos.exc.QueryError(
+                details=[common_exc.ErrorDetail(message=str(error))],
+            ) from error
         event_model = result.unique().scalar_one_or_none()
         if event_model:
             return dto.EventDetailsDto(
@@ -292,7 +295,9 @@ class EventQueryRepo(
         try:
             result = await self._db_session.execute(query)
         except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(msg=str(error)) from error
+            raise common_repos.exc.QueryError(
+                details=[common_exc.ErrorDetail(message=str(error))],
+            ) from error
         event_models_list = result.unique().scalars().all()
         return [
             dto.EventListDto(

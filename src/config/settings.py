@@ -30,6 +30,10 @@ class Settings(pydantic_settings.BaseSettings):
     DEFAULT_PAGE_SIZE: int = 25
     MAX_PAGE_SIZE: int = 100
 
+    # Password settings
+    PASSWORD_MIN_LENGTH: int = 8
+    PASSWORD_MAX_LENGTH: int = 100
+
     @functools.cached_property
     def db_url(self) -> str:
         return f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
