@@ -6,7 +6,7 @@ from src.volleyme.domain import aggregates, types
 class UserRepo(typing.Protocol):
     """User repository protocol."""
 
-    async def get_user(self, user_id: types.UserId) -> aggregates.User:
+    async def get_user(self, user_id: types.UserId) -> aggregates.User | None:
         """Get user by id."""
         ...
 
@@ -21,7 +21,11 @@ class UserRepo(typing.Protocol):
         """Get list of users by ids."""
         ...
 
-    async def save_user(self, user: aggregates.User) -> aggregates.User:
+    async def save_user(
+        self,
+        user: aggregates.User,
+        create: bool = ...,
+    ) -> aggregates.User:
         """Save user."""
         ...
 

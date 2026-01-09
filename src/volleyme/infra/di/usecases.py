@@ -20,6 +20,15 @@ class Usecases(containers.DeclarativeContainer):
         event_repo=infra.event_repo,
         event_query_repo=infra.event_query_repo,
     )
+    update_event = providers.Factory(
+        usecases.UpdateEventUseCase,
+        event_repo=infra.event_repo,
+        event_query_repo=infra.event_query_repo,
+    )
+    delete_event = providers.Factory(
+        usecases.DeleteEventUseCase,
+        event_repo=infra.event_repo,
+    )
     authenticate = providers.Factory(
         usecases.AuthUseCase,
         auth_strategy=infra.auth_strategy,

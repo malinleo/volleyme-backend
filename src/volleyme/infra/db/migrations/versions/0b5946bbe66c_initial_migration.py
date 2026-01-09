@@ -84,6 +84,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["event_id"],
             ["event.id"],
+            name="fk_game_event_id",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -108,6 +109,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["user.id"],
+            name="fk_player_user_id",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -133,6 +135,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["user.id"],
+            name="fk_profile_user_id",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -158,6 +161,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["game_id"],
             ["game.id"],
+            name="fk_game_team_game_id",
         ),
         sa.PrimaryKeyConstraint("id"),
     )

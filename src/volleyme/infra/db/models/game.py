@@ -20,7 +20,7 @@ class Game(
     __tablename__ = "game"
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("event.id"),
+        sqlalchemy.ForeignKey("event.id", name="fk_game_event_id"),
     )
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
         "Event",

@@ -10,6 +10,6 @@ class DI(containers.DeclarativeContainer):
             "src.volleyme.presentation.rest.deps",
         ],
     )
-    container = providers.Self()
+    container: providers.Self[DI] = providers.Self()
     usecases = providers.Container(usecases.Usecases)
     infra = providers.Container(infra.Infra)

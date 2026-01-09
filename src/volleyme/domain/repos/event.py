@@ -14,8 +14,12 @@ class EventRepo(typing.Protocol):
         """Get list of events with pagination."""
         ...
 
-    async def save_event(self, event: aggregates.Event) -> aggregates.Event:
-        """Create event."""
+    async def save_event(
+        self,
+        event: aggregates.Event,
+        create: bool = ...,
+    ) -> aggregates.Event:
+        """Save event."""
         ...
 
     async def delete_event(self, event_id: types.EventId) -> None:

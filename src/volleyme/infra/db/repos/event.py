@@ -37,6 +37,8 @@ class EventRepo(
             currency=event_model.currency,
             image_urls=event_model.image_urls,
             games=[],
+            created_by=types.UserId(event_model.created_by_id),
+            updated_by=types.UserId(event_model.updated_by_id),
         )
         for game_model in event_model.games:
             game = aggregates.Game(
@@ -66,10 +68,13 @@ class EventRepo(
                 sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
                     models.Game.teams,
                 ),
+                sqlalchemy.orm.joinedload(self._model_class.participants),
+                sqlalchemy.orm.joinedload(self._model_class.hosts),
             },
         )
         if event_model:
             return self._parse_event_model(event_model)
+        return None
 
     async def get_events(self, limit: int, offset: int) -> list[aggregates.Event]:
         event_models = await self._get_many(
@@ -82,11 +87,17 @@ class EventRepo(
                 sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
                     models.Game.teams,
                 ),
+                sqlalchemy.orm.joinedload(self._model_class.participants),
+                sqlalchemy.orm.joinedload(self._model_class.hosts),
             },
         )
         return [self._parse_event_model(event_model) for event_model in event_models]
 
-    async def save_event(self, event: aggregates.Event) -> aggregates.Event:
+    async def save_event(
+        self,
+        event: aggregates.Event,
+        create: bool = False,
+    ) -> aggregates.Event:
         event_model = models.Event(
             id=event.id,
             start_dt=event.start_dt,
@@ -110,6 +121,7 @@ class EventRepo(
         saved_event = self._parse_event_model(
             await self._save(
                 event_model,
+                create=create,
                 load_configs={
                     sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
                         models.Game.teams,
@@ -127,8 +139,8 @@ class EventRepo(
             models.EventHostRel(event_id=event_model.id, user_id=host)
             for host in event.hosts
         ]
-        await self._bulk_save(participants_rels)
-        await self._bulk_save(hosts_rels)
+        await self._bulk_save(participants_rels, create=create)
+        await self._bulk_save(hosts_rels, create=create)
         return saved_event
 
     async def delete_event(self, event_id: types.EventId) -> None:
@@ -227,8 +239,6 @@ class EventQueryRepo(
                             participant.profile.avatar_url
                             if participant.profile
                             else None
-                            if participant.profile
-                            else None
                         ),
                         name=(
                             participant.profile.full_name
@@ -247,6 +257,7 @@ class EventQueryRepo(
                     for host in event_model.hosts
                 ],
             )
+        return None
 
     async def get_events_info_for_user(
         self,

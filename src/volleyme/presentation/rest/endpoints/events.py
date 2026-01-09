@@ -73,3 +73,37 @@ async def create_event(
     return schemas.EventDetailResponse.model_validate(
         await usecase.execute(dto.CreateEventDto.model_validate(event), user.id),
     )
+
+
+@events_router.put("/{event_id}", response_model=schemas.EventDetailResponse)
+@wiring.inject
+async def update_event(
+    usecase: typing.Annotated[
+        usecases.UpdateEventUseCase,
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.update_event]]),
+    ],
+    event_id: uuid.UUID,
+    event: schemas.UpdateEventRequest,
+    user: deps.AuthUserDependencyType,
+):
+    return schemas.EventDetailResponse.model_validate(
+        await usecase.execute(
+            event_id,
+            dto.UpdateEventDto.model_validate(event),
+            user.id,
+        ),
+    )
+
+
+@events_router.delete("/{event_id}")
+@wiring.inject
+async def delete_event(
+    usecase: typing.Annotated[
+        usecases.DeleteEventUseCase,
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.delete_event]]),
+    ],
+    event_id: uuid.UUID,
+    user: deps.AuthUserDependencyType,
+):
+    await usecase.execute(event_id, user.id)
+    return fastapi.Response(status_code=fastapi.status.HTTP_204_NO_CONTENT)

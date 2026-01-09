@@ -16,7 +16,7 @@ class GameTeam(
     __tablename__ = "game_team"
 
     game_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("game.id"),
+        sqlalchemy.ForeignKey("game.id", name="fk_game_team_game_id"),
     )
     game: sqlalchemy.orm.Mapped[Game] = sqlalchemy.orm.relationship(
         "Game",

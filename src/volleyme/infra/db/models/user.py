@@ -41,6 +41,7 @@ class User(
         sqlalchemy.orm.relationship(
             "EventParticipantRel",
             back_populates="user",
+            cascade="all, delete-orphan",
         )
     )
     hosted_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(
@@ -52,6 +53,7 @@ class User(
         sqlalchemy.orm.relationship(
             "EventHostRel",
             back_populates="user",
+            cascade="all, delete-orphan",
         )
     )
     created_events: sqlalchemy.orm.Mapped[list[Event]] = sqlalchemy.orm.relationship(

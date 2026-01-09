@@ -71,7 +71,7 @@ class SQLAlchemyModelRepo(
             query = query.options(*load_configs)
         try:
             return await self._db_session.execute(query)
-        except sqlalchemy.exc.SQLAlchemyError as error:
+        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
             raise exc.QueryError(
                 details=[common_exc.ErrorDetail(message=str(error))],
             ) from error
@@ -148,16 +148,20 @@ class SQLAlchemyModelRepo(
     async def _save(
         self,
         instance: ModelT,
+        create: bool = False,
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
     ) -> ModelT:
         """Save instance to db."""
         model_class: type[ModelT] = type(instance)
-        self._db_session.add(instance=instance)
+        if create:
+            self._db_session.add(instance=instance)
+        else:
+            await self._db_session.merge(instance=instance)
         try:
             await self._db_session.flush()
-        except sqlalchemy.exc.SQLAlchemyError as error:
+        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
             raise exc.SaveError(
                 details=[
                     common_exc.ErrorDetail(message=f"Object save error:\n{error}")
@@ -179,6 +183,7 @@ class SQLAlchemyModelRepo(
     async def _bulk_save(
         self,
         instances: collections.abc.Sequence[ModelT],
+        create: bool = False,
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
@@ -187,10 +192,14 @@ class SQLAlchemyModelRepo(
         if not instances:
             return instances
         model_class: type[ModelT] = type(instances[0])
-        self._db_session.add_all(instances=instances)
+        if create:
+            self._db_session.add_all(instances=instances)
+        else:
+            for instance in instances:
+                await self._db_session.merge(instance=instance)
         try:
             await self._db_session.flush()
-        except sqlalchemy.exc.SQLAlchemyError as error:
+        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
             raise exc.SaveError(
                 details=[
                     common_exc.ErrorDetail(message=f"Object save error:\n{error}")
@@ -221,17 +230,19 @@ class SQLAlchemyModelRepo(
         query = sqlalchemy.delete(model_class).where(*where)
         try:
             await self._db_session.execute(query)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            raise exc.SaveError(
+        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
+            raise exc.DeleteError(
                 details=[
                     common_exc.ErrorDetail(message=f"Object save error:\n{error}")
                 ],
             ) from error
 
     async def _delete_instance(
-        self, model_class: type[ModelT], instance: ModelT
+        self,
+        instance: ModelT,
     ) -> None:
-        """Delete objects from table by condition."""
+        """Delete instance from database."""
+        model_class: type[ModelT] = type(instance)
         return await self._delete(
             model_class=model_class,
             where=self._build_model_ident_expressions(

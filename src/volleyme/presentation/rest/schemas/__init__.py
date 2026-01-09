@@ -4,5 +4,6 @@ from .auth import JWTAuthTokenResponse as JWTAuthTokenResponse
 from .events import CreateEventRequest as CreateEventRequest
 from .events import EventDetailResponse as EventDetailResponse
 from .events import EventListResponse as EventListResponse
+from .events import UpdateEventRequest as UpdateEventRequest
 from .pagination import PaginatedResponse as PaginatedResponse
 from .pagination import PaginationParams as PaginationParams

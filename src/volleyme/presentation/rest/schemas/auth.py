@@ -1,8 +1,8 @@
 import pydantic
 
 from src.common import schemas
-from src.volleyme.presentation import auth
 from src.config import settings
+from src.volleyme.presentation import auth
 
 
 class EmailPasswordLoginRequest(schemas.BaseSchema):

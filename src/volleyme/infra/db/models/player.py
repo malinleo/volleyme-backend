@@ -23,7 +23,7 @@ class Player(
         sqlalchemy.SmallInteger,
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("user.id"),
+        sqlalchemy.ForeignKey("user.id", name="fk_player_user_id"),
     )
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",

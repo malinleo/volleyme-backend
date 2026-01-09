@@ -43,6 +43,7 @@ class UserRepo(
         )
         if user_model:
             return self._parse_user_model(user_model)
+        return None
 
     async def get_users(self, limit: int, offset: int) -> list[aggregates.User]:
         return [
@@ -73,7 +74,11 @@ class UserRepo(
             )
         ]
 
-    async def save_user(self, user: aggregates.User) -> aggregates.User:
+    async def save_user(
+        self,
+        user: aggregates.User,
+        create: bool = False,
+    ) -> aggregates.User:
         user_model = models.User(
             id=user.id,
             email=user.email,
@@ -88,6 +93,7 @@ class UserRepo(
             )
         user_model = await self._save(
             user_model,
+            create=create,
             load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
         )
         return self._parse_user_model(user_model)

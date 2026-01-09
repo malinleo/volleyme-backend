@@ -16,10 +16,10 @@ class PasswordValidator(services.auth.PasswordValidator):
             policy.validate(password) for policy in self._policies
         )
         is_valid = all(result.is_valid for result in validation_results)
-        errors = []
+        errors: list[services.auth.PasswordValidationErrorData] = []
         if not is_valid:
             for result in validation_results:
-                if not result.is_valid:
+                if not result.is_valid and result.error:
                     errors.append(result.error)
 
         return services.auth.PasswordValidationResults(is_valid=is_valid, errors=errors)

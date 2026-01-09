@@ -1,10 +1,12 @@
 import dataclasses
 import datetime
 import typing
+import uuid
 
 import jwt
 
 from src.volleyme.application import query_repos, services
+from src.volleyme.domain import types
 from src.volleyme.presentation import auth
 
 
@@ -56,7 +58,7 @@ class JWTAuthStrategy(services.AuthStrategy):
             raise services.ExpiredToken()
         except jwt.exceptions.PyJWTError:
             raise services.InvalidToken()
-        return services.AuthUser(id=payload["sub"])
+        return services.AuthUser(id=types.UserId(uuid.UUID(payload["sub"])))
 
 
 @dataclasses.dataclass(frozen=True)

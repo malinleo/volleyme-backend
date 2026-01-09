@@ -90,10 +90,10 @@ class Event(
         back_populates="event",
     )
     created_by_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("user.id"),
+        sqlalchemy.ForeignKey("user.id", name="fk_event_created_by"),
     )
     updated_by_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("user.id"),
+        sqlalchemy.ForeignKey("user.id", name="fk_event_updated_by"),
     )
     created_by: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
@@ -123,7 +123,9 @@ class EventParticipantRel(base_models.BaseModel):
     )
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("event.id"),
+        sqlalchemy.ForeignKey(
+            "event.id", name="fk_event_participant_rel_event_id", ondelete="CASCADE"
+        ),
         primary_key=True,
     )
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
@@ -131,7 +133,9 @@ class EventParticipantRel(base_models.BaseModel):
         back_populates="participants_rel",
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("user.id"),
+        sqlalchemy.ForeignKey(
+            "user.id", name="fk_event_participant_rel_user_id", ondelete="CASCADE"
+        ),
         primary_key=True,
     )
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
@@ -151,7 +155,9 @@ class EventHostRel(base_models.BaseModel):
     )
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("event.id"),
+        sqlalchemy.ForeignKey(
+            "event.id", name="fk_event_host_rel_event_id", ondelete="CASCADE"
+        ),
         primary_key=True,
     )
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
@@ -159,7 +165,9 @@ class EventHostRel(base_models.BaseModel):
         back_populates="hosts_rel",
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.ForeignKey("user.id"),
+        sqlalchemy.ForeignKey(
+            "user.id", name="fk_event_host_rel_user_id", ondelete="CASCADE"
+        ),
         primary_key=True,
     )
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
