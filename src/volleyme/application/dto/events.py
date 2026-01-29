@@ -24,19 +24,6 @@ class CreateEventDto(dto.BaseDto):
     format_type: enums.EventFormatType
 
 
-class UpdateEventDto(dto.BaseDto):
-    title: str = pydantic.Field(max_length=255)
-    start_dt: datetime.datetime
-    end_dt: datetime.datetime
-    city: str = pydantic.Field(max_length=255)
-    address: str = pydantic.Field(max_length=1024)
-    price: decimal.Decimal = pydantic.Field(ge=0)
-    description: str
-    image_urls: list[str]
-    country: str = pydantic.Field(max_length=2)
-    currency: str = pydantic.Field(max_length=3)
-
-
 class ParticipantInfoDto(dto.BaseDto):
     id: uuid.UUID
     avatar_url: str | None

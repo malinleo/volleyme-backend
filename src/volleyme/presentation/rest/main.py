@@ -8,7 +8,16 @@ from src.volleyme.presentation.rest import endpoints, exc_handlers
 container = DI()
 container.wire(modules=[__name__, endpoints.events, endpoints.auth])
 
-app = fastapi.FastAPI(debug=settings.DEBUG)
+app = fastapi.FastAPI(
+    debug=settings.DEBUG,
+    title="Volleyme API",
+    description="API for the Volleyme project",
+    version="0.0.1",
+    contact={
+        "name": "Leonid Malin",
+        "email": "leonid.malin@sensemitter.com",
+    },
+)
 
 app.include_router(endpoints.events_router)
 app.include_router(endpoints.auth_router)

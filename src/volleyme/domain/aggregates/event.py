@@ -37,8 +37,8 @@ class Event(
     max_participants_count: int = attrs.field(validator=attrs.validators.gt(0))
     image_urls: list[str]
     games: list[Game]
-    participants: list[types.UserId]
-    hosts: list[types.UserId]
+    participants: set[types.UserId]
+    hosts: set[types.UserId]
 
     def __attrs_post_init__(self) -> None:
         errors = []
@@ -51,6 +51,10 @@ class Event(
     def is_finished(self) -> bool:
         return self.check_is_finished(datetime.datetime.now(datetime.UTC))
 
+    @property
+    def is_started(self) -> bool:
+        return self.check_is_started(datetime.datetime.now(datetime.UTC))
+
     def _validate_start_before_end(self) -> Exception | None:
         if self.start_dt >= self.end_dt:
             return ValueError("Start date must be before end date")
@@ -58,6 +62,21 @@ class Event(
 
     def check_is_finished(self, current_dt: datetime.datetime) -> bool:
         return self.end_dt < current_dt.astimezone(datetime.UTC)
+
+    def check_is_started(self, current_dt: datetime.datetime) -> bool:
+        return self.start_dt < current_dt.astimezone(datetime.UTC)
+
+    def add_participant(self, user_id: types.UserId) -> None:
+        self.participants.add(user_id)
+
+    def remove_participant(self, user_id: types.UserId) -> None:
+        self.participants.discard(user_id)
+
+    def add_host(self, user_id: types.UserId) -> None:
+        self.hosts.add(user_id)
+
+    def remove_host(self, user_id: types.UserId) -> None:
+        self.hosts.discard(user_id)
 
 
 @attrs.define(kw_only=True)

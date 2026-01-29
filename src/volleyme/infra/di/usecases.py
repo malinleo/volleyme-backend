@@ -20,11 +20,6 @@ class Usecases(containers.DeclarativeContainer):
         event_repo=infra.event_repo,
         event_query_repo=infra.event_query_repo,
     )
-    update_event = providers.Factory(
-        usecases.UpdateEventUseCase,
-        event_repo=infra.event_repo,
-        event_query_repo=infra.event_query_repo,
-    )
     delete_event = providers.Factory(
         usecases.DeleteEventUseCase,
         event_repo=infra.event_repo,
@@ -41,4 +36,12 @@ class Usecases(containers.DeclarativeContainer):
         usecases.EmailPasswordRegisterUseCase,
         user_repo=infra.user_repo,
         password_validator=infra.password_validator,
+    )
+    join_event = providers.Factory(
+        usecases.JoinEventUseCase,
+        event_repo=infra.event_repo,
+    )
+    leave_event = providers.Factory(
+        usecases.LeaveEventUseCase,
+        event_repo=infra.event_repo,
     )

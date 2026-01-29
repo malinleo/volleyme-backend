@@ -68,18 +68,3 @@ class CreateEventRequest(schemas.BaseSchema):
     currency: str = pydantic.Field(max_length=3, default="RUB")
     game_type: enums.GameType = enums.GameType.VOLLEYBALL
     format_type: enums.EventFormatType = enums.EventFormatType.DEFAULT
-
-
-class UpdateEventRequest(schemas.BaseSchema):
-    title: str = pydantic.Field(max_length=255)
-    start_dt: datetime.datetime
-    end_dt: datetime.datetime
-    city: str = pydantic.Field(max_length=255)
-    address: str = pydantic.Field(max_length=1024)
-    price: decimal.Decimal = pydantic.Field(ge=0)
-    description: str
-
-    # Auto filled for now
-    image_urls: list[str] = pydantic.Field(default_factory=list)
-    country: str = pydantic.Field(max_length=2, default="RU")
-    currency: str = pydantic.Field(max_length=3, default="RUB")

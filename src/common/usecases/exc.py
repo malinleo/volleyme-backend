@@ -7,6 +7,7 @@ class UseCaseErrorCode(enum.StrEnum):
     """All possible error codes."""
 
     DEFAULT = "__USE_CASE_ERROR__"
+    VALIDATION_FAILED = "__USE_CASE_VALIDATION_FAILED__"
     NOT_FOUND = "__USE_CASE_NOT_FOUND__"
     UNAUTHORIZED = "__USE_CASE_UNAUTHORIZED__"
     PERMISSION_DENIED = "__USE_CASE_PERMISSION_DENIED__"

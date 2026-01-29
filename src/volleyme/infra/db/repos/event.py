@@ -28,10 +28,10 @@ class EventRepo(
             city=event_model.city,
             address=event_model.address,
             max_participants_count=event_model.max_participants_count,
-            participants=[
+            participants={
                 types.UserId(participant.id) for participant in event_model.participants
-            ],
-            hosts=[types.UserId(host.id) for host in event_model.hosts],
+            },
+            hosts={types.UserId(host.id) for host in event_model.hosts},
             description=event_model.description,
             price=event_model.price,
             currency=event_model.currency,
