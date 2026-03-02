@@ -55,9 +55,9 @@ class JWTAuthStrategy(services.AuthStrategy):
         try:
             payload = self.token_service.decode(self.credentials.token)
         except jwt.exceptions.ExpiredSignatureError:
-            raise services.ExpiredToken()
+            raise services.exc.ExpiredToken()
         except jwt.exceptions.PyJWTError:
-            raise services.InvalidToken()
+            raise services.exc.InvalidToken()
         return services.AuthUser(id=types.UserId(uuid.UUID(payload["sub"])))
 
 

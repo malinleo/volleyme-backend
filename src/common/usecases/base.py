@@ -16,12 +16,11 @@ class BaseUseCase:
         errors = tuple(result for result in validation_results if not result.is_valid)
         if errors:
             raise exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=error.error_msg or "Validation failed",
-                    )
-                    for error in errors
-                ],
-                code=exc.UseCaseErrorCode.VALIDATION_FAILED,
+                detail=common_exc.ErrorDetail(
+                    code=exc.UseCaseErrorCode.VALIDATION_FAILED,
+                    messages=[
+                        error.error_msg or "Validation failed" for error in errors
+                    ],
+                )
             )
         return None

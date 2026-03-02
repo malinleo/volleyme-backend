@@ -8,7 +8,7 @@ import uuid
 import attrs
 
 from src.common import entities as common_entities
-from src.volleyme.domain import enums, types
+from src.volleyme.domain import enums, exc, types
 
 
 @attrs.define(kw_only=True)
@@ -41,11 +41,7 @@ class Event(
     hosts: set[types.UserId]
 
     def __attrs_post_init__(self) -> None:
-        errors = []
-        if error := self._validate_start_before_end():
-            errors.append(error)
-        if errors:
-            raise ValueError(errors)
+        self._validate_start_before_end()
 
     @property
     def is_finished(self) -> bool:
@@ -55,10 +51,9 @@ class Event(
     def is_started(self) -> bool:
         return self.check_is_started(datetime.datetime.now(datetime.UTC))
 
-    def _validate_start_before_end(self) -> Exception | None:
+    def _validate_start_before_end(self) -> None:
         if self.start_dt >= self.end_dt:
-            return ValueError("Start date must be before end date")
-        return None
+            raise exc.EventEndBeforeStartError(self.start_dt, self.end_dt)
 
     def check_is_finished(self, current_dt: datetime.datetime) -> bool:
         return self.end_dt < current_dt.astimezone(datetime.UTC)

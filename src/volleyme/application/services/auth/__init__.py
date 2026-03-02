@@ -1,7 +1,4 @@
-from .exc import AuthError as AuthError
-from .exc import AuthErrorCode as AuthErrorCode
-from .exc import ExpiredToken as ExpiredToken
-from .exc import InvalidToken as InvalidToken
+from . import exc as exc
 from .password import PasswordPolicy as PasswordPolicy
 from .password import PasswordValidationErrorData as PasswordValidationErrorData
 from .password import PasswordValidationResult as PasswordValidationResult

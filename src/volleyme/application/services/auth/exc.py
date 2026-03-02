@@ -1,6 +1,6 @@
 import enum
 
-from src.common import exc
+from src.common import exc as common_exc
 
 
 class AuthErrorCode(enum.StrEnum):
@@ -11,22 +11,37 @@ class AuthErrorCode(enum.StrEnum):
     EXPIRED_TOKEN = "__EXPIRED_TOKEN__"
 
 
-class AuthError(exc.BaseError):
+class AuthError(common_exc.BaseError):
     """Error in authentication."""
 
-    default_msg = "Authentication error"
-    code = AuthErrorCode.DEFAULT
+    def __init__(self, detail: common_exc.ErrorDetail) -> None:
+        super().__init__(
+            detail=common_exc.ErrorDetail(
+                code=AuthErrorCode.DEFAULT,
+                messages=["Authentication error"],
+            ),
+        )
 
 
 class InvalidToken(AuthError):
     """Invalid token."""
 
-    default_msg = "Token is invalid"
-    code = AuthErrorCode.INVALID_TOKEN
+    def __init__(self) -> None:
+        super().__init__(
+            detail=common_exc.ErrorDetail(
+                code=AuthErrorCode.INVALID_TOKEN,
+                messages=["Token is invalid"],
+            ),
+        )
 
 
 class ExpiredToken(AuthError):
     """Expired token."""
 
-    default_msg = "Token has expired"
-    code = AuthErrorCode.EXPIRED_TOKEN
+    def __init__(self) -> None:
+        super().__init__(
+            detail=common_exc.ErrorDetail(
+                code=AuthErrorCode.EXPIRED_TOKEN,
+                messages=["Token has expired"],
+            ),
+        )

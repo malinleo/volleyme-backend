@@ -1,15 +1,14 @@
-import sqlalchemy.exc
 import sqlalchemy.orm
 
-from src.common import exc as common_exc
-from src.common import repos as common_repos
 from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, repos, types
 from src.volleyme.infra.db import models
 
+from . import base
+
 
 class UserRepo(
-    common_repos.SQLAlchemyIdModelRepo,
+    base.SQLAlchemyIdModelRepo,
     repos.UserRepo,
 ):
     """User repository implementation."""
@@ -36,7 +35,7 @@ class UserRepo(
         return user
 
     async def get_user(self, user_id: types.UserId) -> aggregates.User | None:
-        user_model = await self._try_get_one(
+        user_model, _ = await self._try_get_one(
             id=user_id,
             model_class=self._model_class,
             load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
@@ -46,17 +45,15 @@ class UserRepo(
         return None
 
     async def get_users(self, limit: int, offset: int) -> list[aggregates.User]:
-        return [
-            self._parse_user_model(user_model)
-            for user_model in await self._get_many(
-                model_class=self._model_class,
-                where=(),
-                order_by=(),
-                limit=limit,
-                offset=offset,
-                load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
-            )
-        ]
+        user_models, _ = await self._get_many(
+            model_class=self._model_class,
+            where=(),
+            order_by=(),
+            limit=limit,
+            offset=offset,
+            load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
+        )
+        return [self._parse_user_model(user_model) for user_model in user_models]
 
     async def get_users_by_ids(
         self,
@@ -64,15 +61,13 @@ class UserRepo(
     ) -> list[aggregates.User]:
         if not user_ids:
             return []
-        return [
-            self._parse_user_model(user_model)
-            for user_model in await self._get_many(
-                model_class=self._model_class,
-                where=(self._model_class.id.in_(user_ids),),
-                order_by=(),
-                load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
-            )
-        ]
+        user_models, _ = await self._get_many(
+            model_class=self._model_class,
+            where=(self._model_class.id.in_(user_ids),),
+            order_by=(),
+            load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
+        )
+        return [self._parse_user_model(user_model) for user_model in user_models]
 
     async def save_user(
         self,
@@ -109,7 +104,7 @@ class UserRepo(
 
 
 class UserQueryRepo(
-    common_repos.SQLAlchemyIdModelRepo,
+    base.SQLAlchemyIdModelRepo,
     query_repos.UserQueryRepo,
 ):
     """User query repository implementation."""
@@ -120,13 +115,8 @@ class UserQueryRepo(
         query = sqlalchemy.select(self._model_class).where(
             self._model_class.email == email,
         )
-        try:
-            result = await self._db_session.execute(query)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(
-                details=[common_exc.ErrorDetail(message=str(error))],
-            ) from error
-        user_model = result.unique().scalar_one_or_none()
+        result = await self._try_execute(query=query)
+        user_model = result.result.unique().scalar_one_or_none()
         if user_model:
             return dto.UserAuthDto(
                 id=types.UserId(user_model.id),

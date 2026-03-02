@@ -6,14 +6,23 @@ import uuid
 import sqlalchemy.exc
 import sqlalchemy.ext.asyncio
 import sqlalchemy.orm.strategy_options
+import sqlalchemy.sql.selectable
 
 from src.common import exc as common_exc
 from src.common import models
-
-from . import exc
+from src.volleyme.domain import repos
 
 ModelT = typing.TypeVar("ModelT", bound=models.BaseModel)
+RelatedModelT = typing.TypeVar("RelatedModelT", bound=models.BaseModel)
 IdDataT = typing.TypeVar("IdDataT")
+
+
+ResultT = typing.TypeVar("ResultT")
+
+
+class QueryResult(typing.NamedTuple, typing.Generic[ResultT]):
+    result: sqlalchemy.Result[tuple[ResultT]]
+    query_str: str
 
 
 class SQLAlchemyModelRepo(
@@ -26,13 +35,11 @@ class SQLAlchemyModelRepo(
         self._db_session = db_session
 
     @staticmethod
-    # @abc.abstractmethod
-    async def _get_id(instance: models.BaseModel) -> tuple[typing.Any, ...]:
+    def _get_id(instance: models.BaseModel) -> tuple[typing.Any, ...]:
         """Retrieve id from instance."""
         primary_key_fields = instance.__table__.primary_key
         return tuple(getattr(instance, field.name) for field in primary_key_fields)
 
-    # @abc.abstractmethod
     def _build_model_ident_expressions(
         self,
         id: tuple[typing.Any, ...],
@@ -58,7 +65,7 @@ class SQLAlchemyModelRepo(
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
-    ) -> sqlalchemy.Result[tuple[ModelT, ...]]:
+    ) -> QueryResult[ModelT]:
         """Get result of select query."""
         query = (
             sqlalchemy.select(model_class)
@@ -69,11 +76,45 @@ class SQLAlchemyModelRepo(
         )
         if load_configs:
             query = query.options(*load_configs)
+        return await self._try_execute(query=query)
+
+    @typing.overload
+    async def _try_execute(
+        self,
+        query: sqlalchemy.Select[tuple[ResultT]],
+    ) -> QueryResult[ResultT]: ...
+
+    @typing.overload
+    async def _try_execute(
+        self,
+        query: sqlalchemy.Delete,
+    ) -> QueryResult[typing.Any]: ...
+
+    async def _try_execute(
+        self,
+        query: sqlalchemy.Select[tuple[ResultT]] | sqlalchemy.Delete,
+    ) -> QueryResult[ResultT]:
+        query_str = str(
+            query.compile(
+                compile_kwargs={"literal_binds": True},
+                dialect=self._db_session.bind.dialect,
+            ).statement
+        )
         try:
-            return await self._db_session.execute(query)
-        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
-            raise exc.QueryError(
-                details=[common_exc.ErrorDetail(message=str(error))],
+            return QueryResult(
+                result=await self._db_session.execute(query),
+                query_str=query_str,
+            )
+        except sqlalchemy.exc.DBAPIError as error:
+            raise repos.exc.QueryError(
+                query=error.statement or "Unknown query"
+            ) from error
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise repos.exc.RepoError(
+                detail=common_exc.ErrorDetail(
+                    code=repos.exc.ErrorCode.REPO,
+                    messages=[f"Sqlalchemy error: {error}"],
+                )
             ) from error
 
     async def _try_get_one(
@@ -83,7 +124,7 @@ class SQLAlchemyModelRepo(
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
-    ) -> ModelT | None:
+    ) -> tuple[ModelT | None, str]:
         """Get one instance by or `None`."""
         result = await self._run_select(
             model_class=model_class,
@@ -93,7 +134,7 @@ class SQLAlchemyModelRepo(
             ),
             load_configs=load_configs,
         )
-        return result.unique().scalar_one_or_none()
+        return result.result.unique().scalar_one_or_none(), result.query_str
 
     async def _get_one(
         self,
@@ -109,15 +150,14 @@ class SQLAlchemyModelRepo(
             NotFoundError: if object wasn't found.
 
         """
-        if instance := await self._try_get_one(
+        instance, query_str = await self._try_get_one(
             id=id,
             model_class=model_class,
             load_configs=load_configs,
-        ):
-            return instance
-        raise exc.NotFoundError(
-            details=[common_exc.ErrorDetail(message=f"Object with {id=} wasn't found")],
         )
+        if instance:
+            return instance
+        raise repos.exc.NotFoundError(query=query_str)
 
     async def _get_many(
         self,
@@ -133,7 +173,7 @@ class SQLAlchemyModelRepo(
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
-    ) -> collections.abc.Sequence[ModelT]:
+    ) -> tuple[collections.abc.Sequence[ModelT], str]:
         """Get list of instances filtered by `where` conditions."""
         result = await self._run_select(
             model_class=model_class,
@@ -143,7 +183,7 @@ class SQLAlchemyModelRepo(
             offset=offset,
             load_configs=load_configs,
         )
-        return result.scalars().unique().all()
+        return result.result.scalars().unique().all(), result.query_str
 
     async def _save(
         self,
@@ -161,24 +201,27 @@ class SQLAlchemyModelRepo(
             await self._db_session.merge(instance=instance)
         try:
             await self._db_session.flush()
-        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
-            raise exc.SaveError(
-                details=[
-                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
-                ],
+        except sqlalchemy.exc.DBAPIError as error:
+            raise repos.exc.SaveError(
+                query=error.statement or "Unknown query",
             ) from error
-        instance = (
-            await self._get_many(
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise repos.exc.RepoError(
+                detail=common_exc.ErrorDetail(
+                    code=repos.exc.ErrorCode.REPO,
+                    messages=[f"Sqlalchemy error: {error}"],
+                )
+            ) from error
+        result = await self._get_many(
+            model_class=model_class,
+            where=self._build_model_ident_expressions(
+                id=self._get_id(instance=instance),
                 model_class=model_class,
-                where=self._build_model_ident_expressions(
-                    id=await self._get_id(instance=instance),
-                    model_class=model_class,
-                ),
-                order_by=(),
-                load_configs=load_configs,
-            )
-        )[0]
-        return instance
+            ),
+            order_by=(),
+            load_configs=load_configs,
+        )
+        return result[0][0]
 
     async def _bulk_save(
         self,
@@ -199,25 +242,31 @@ class SQLAlchemyModelRepo(
                 await self._db_session.merge(instance=instance)
         try:
             await self._db_session.flush()
-        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
-            raise exc.SaveError(
-                details=[
-                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
-                ],
+        except sqlalchemy.exc.DBAPIError as error:
+            raise repos.exc.SaveError(
+                query=error.statement or "Unknown query",
+            ) from error
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise repos.exc.RepoError(
+                detail=common_exc.ErrorDetail(
+                    code=repos.exc.ErrorCode.REPO,
+                    messages=[f"Sqlalchemy error: {error}"],
+                )
             ) from error
         where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = []
         for instance in instances:
             exprs = self._build_model_ident_expressions(
-                id=await self._get_id(instance=instance),
+                id=self._get_id(instance=instance),
                 model_class=model_class,
             )
             where_exprs.extend(exprs)
-        return await self._get_many(
+        result = await self._get_many(
             model_class=model_class,
             where=where_exprs,
             order_by=(),
             load_configs=load_configs,
         )
+        return result[0]
 
     async def _delete(
         self,
@@ -228,28 +277,66 @@ class SQLAlchemyModelRepo(
     ) -> None:
         """Delete objects from table by condition."""
         query = sqlalchemy.delete(model_class).where(*where)
-        try:
-            await self._db_session.execute(query)
-        except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as error:
-            raise exc.DeleteError(
-                details=[
-                    common_exc.ErrorDetail(message=f"Object save error:\n{error}")
-                ],
-            ) from error
+        await self._try_execute(query=query)
 
     async def _delete_instance(
         self,
-        instance: ModelT,
+        instance: models.BaseModel,
     ) -> None:
         """Delete instance from database."""
-        model_class: type[ModelT] = type(instance)
+        model_class: type[models.BaseModel] = type(instance)
         return await self._delete(
             model_class=model_class,
             where=self._build_model_ident_expressions(
-                id=await self._get_id(instance=instance),
+                id=self._get_id(instance=instance),
                 model_class=model_class,
             ),
         )
+
+    async def _delete_instances(
+        self,
+        instances: collections.abc.Sequence[models.BaseModel],
+    ) -> None:
+        """Delete instances from database."""
+        if not instances:
+            return
+        model_class: type[models.BaseModel] = type(instances[0])
+        where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = []
+        for instance in instances:
+            exprs = self._build_model_ident_expressions(
+                id=self._get_id(instance=instance),
+                model_class=model_class,
+            )
+            where_exprs.extend(exprs)
+        await self._delete(model_class=model_class, where=where_exprs)
+
+    async def _save_relations(
+        self,
+        existing_instances: collections.abc.Sequence[ModelT],
+        new_instances: collections.abc.Sequence[ModelT],
+        get_rel_id: collections.abc.Callable[[ModelT], tuple[typing.Any, ...]],
+        load_configs: collections.abc.Set[
+            sqlalchemy.orm.strategy_options._AbstractLoad
+        ] = set(),
+    ) -> tuple[collections.abc.Sequence[ModelT], collections.abc.Sequence[ModelT]]:
+        """Save relations between instances."""
+        old_instances_ids = {get_rel_id(instance) for instance in existing_instances}
+        new_instances_ids = {get_rel_id(instance) for instance in new_instances}
+        removed_instances_ids = old_instances_ids - new_instances_ids
+        added_instances_ids = new_instances_ids - old_instances_ids
+        removed_rels = [
+            instance
+            for instance in existing_instances
+            if get_rel_id(instance) in removed_instances_ids
+        ]
+        added_rels = [
+            instance
+            for instance in new_instances
+            if get_rel_id(instance) in added_instances_ids
+        ]
+        await self._bulk_save(added_rels, create=True, load_configs=load_configs)
+        await self._delete_instances(removed_rels)
+        return added_rels, removed_rels
 
 
 IdModelT = typing.TypeVar("IdModelT", bound=models.IDModel)

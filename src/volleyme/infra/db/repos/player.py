@@ -1,10 +1,11 @@
-from src.common import repos as common_repos
 from src.volleyme.domain import aggregates, repos, types
 from src.volleyme.infra.db import models
 
+from . import base
+
 
 class PlayerRepo(
-    common_repos.SQLAlchemyIdModelRepo,
+    base.SQLAlchemyIdModelRepo,
     repos.PlayerRepo,
 ):
     """Player repository implementation."""
@@ -22,7 +23,7 @@ class PlayerRepo(
         )
 
     async def get_player(self, player_id: types.PlayerId) -> aggregates.Player | None:
-        player_model = await self._try_get_one(
+        player_model, _ = await self._try_get_one(
             model_class=self._model_class,
             id=player_id,
         )
@@ -31,15 +32,15 @@ class PlayerRepo(
         return None
 
     async def get_players(self, limit: int, offset: int) -> list[aggregates.Player]:
+        player_models, _ = await self._get_many(
+            model_class=self._model_class,
+            where=(),
+            order_by=(),
+            limit=limit,
+            offset=offset,
+        )
         return [
-            self._parse_player_model(player_model)
-            for player_model in await self._get_many(
-                model_class=self._model_class,
-                where=(),
-                order_by=(),
-                limit=limit,
-                offset=offset,
-            )
+            self._parse_player_model(player_model) for player_model in player_models
         ]
 
     async def get_players_by_ids(
@@ -48,13 +49,13 @@ class PlayerRepo(
     ) -> list[aggregates.Player]:
         if not player_ids:
             return []
+        player_models, _ = await self._get_many(
+            model_class=self._model_class,
+            where=(self._model_class.id.in_(player_ids),),
+            order_by=(),
+        )
         return [
-            self._parse_player_model(player_model)
-            for player_model in await self._get_many(
-                model_class=self._model_class,
-                where=(self._model_class.id.in_(player_ids),),
-                order_by=(),
-            )
+            self._parse_player_model(player_model) for player_model in player_models
         ]
 
     async def save_player(
