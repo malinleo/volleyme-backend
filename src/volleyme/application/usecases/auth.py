@@ -13,18 +13,19 @@ class AuthUseCase:
     async def execute(self) -> services.AuthUser:
         try:
             auth_user = await self.auth_strategy.authenticate()
-        except services.AuthError as auth_error:
+        except services.exc.AuthError as auth_error:
             raise usecases.exc.UseCaseError(
-                details=auth_error.details,
-                code=auth_error.code,
-            )
+                detail=common_exc.ErrorDetail(
+                    code=usecases.exc.UseCaseErrorCode.DEFAULT,
+                    messages=["Failed to authenticate"],
+                ),
+            ) from auth_error
         if not auth_user:
             raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        message="User with given credentials wasn't found",
-                    )
-                ],
+                detail=common_exc.ErrorDetail(
+                    code=usecases.exc.UseCaseErrorCode.NOT_FOUND,
+                    messages=["User with given credentials wasn't found"],
+                ),
             )
         return auth_user
 
@@ -38,14 +39,18 @@ class EmailPasswordRegisterUseCase:
         validation_results = self.password_validator.validate(password)
         if not validation_results.is_valid:
             raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=error.message,
-                        code=error.code,
-                    )
-                    for error in validation_results.errors
-                ],
-                code=usecases.exc.UseCaseErrorCode.PASSWORD_VALIDATION_FAILED,
+                detail=common_exc.ErrorDetail(
+                    code=usecases.exc.UseCaseErrorCode.PASSWORD_VALIDATION_FAILED,
+                    messages=["Password validation failed"],
+                    fields={
+                        "password": common_exc.FieldErrorDetail(
+                            code=usecases.exc.UseCaseErrorCode.PASSWORD_VALIDATION_FAILED,
+                            messages=[
+                                error.message for error in validation_results.errors
+                            ],
+                        ),
+                    },
+                ),
             )
         password_hash = aggregates.PasswordHash(
             value=services.make_password_hash(password),

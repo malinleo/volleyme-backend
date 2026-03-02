@@ -3,7 +3,6 @@ import datetime
 import uuid
 
 from src.common import exc as common_exc
-from src.common import repos as common_repos
 from src.common import usecases
 from src.volleyme.application import dto, query_repos, services
 from src.volleyme.domain import aggregates, repos, types
@@ -23,11 +22,7 @@ class GetEventByIdUseCase(usecases.BaseUseCase):
             types.UserId(user_id),
         ):
             return event_info
-        raise usecases.exc.NotFound(
-            details=[
-                common_exc.ErrorDetail(message=f"Event with id {event_id} not found"),
-            ],
-        )
+        raise usecases.exc.NotFound(message=f"Event with id {event_id} not found")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -82,13 +77,12 @@ class CreateEventUseCase(usecases.BaseUseCase):
                 ),
                 create=True,
             )
-        except common_repos.exc.RepoError as e:
+        except repos.exc.RepoError as e:
             raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Failed to create event, reason: {e}"
-                    ),
-                ],
+                detail=common_exc.ErrorDetail(
+                    code=usecases.exc.UseCaseErrorCode.DEFAULT,
+                    messages=["Failed to create event"],
+                ),
             ) from e
         event_info = await self.event_query_repo.get_event_info_for_user(
             event_aggregate.id,
@@ -96,11 +90,7 @@ class CreateEventUseCase(usecases.BaseUseCase):
         )
         if not event_info:
             raise usecases.exc.NotFound(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Event with id {event_aggregate.id} not found",
-                    ),
-                ],
+                message=f"Event with id {event_aggregate.id} not found",
             )
         return event_info
 
@@ -113,11 +103,7 @@ class DeleteEventUseCase(usecases.BaseUseCase):
         event_aggregate = await self.event_repo.get_event(types.EventId(event_id))
         if not event_aggregate:
             raise usecases.exc.NotFound(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Event with id {event_id} not found"
-                    ),
-                ],
+                message=f"Event with id {event_id} not found",
             )
         validators = [
             services.validators.CanDeleteEventValidator(
@@ -128,13 +114,12 @@ class DeleteEventUseCase(usecases.BaseUseCase):
         self._run_validation(validators)
         try:
             await self.event_repo.delete_event(event_aggregate.id)
-        except common_repos.exc.RepoError as e:
+        except repos.exc.RepoError as e:
             raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Failed to delete event, reason: {e}"
-                    ),
-                ],
+                detail=common_exc.ErrorDetail(
+                    code=usecases.exc.UseCaseErrorCode.DEFAULT,
+                    messages=["Failed to delete event"],
+                ),
             ) from e
 
 
@@ -145,13 +130,7 @@ class JoinEventUseCase(usecases.BaseUseCase):
     async def execute(self, event_id: uuid.UUID, user_id: uuid.UUID) -> None:
         event_aggregate = await self.event_repo.get_event(types.EventId(event_id))
         if not event_aggregate:
-            raise usecases.exc.NotFound(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Event with id {event_id} not found"
-                    ),
-                ],
-            )
+            raise usecases.exc.NotFound(message=f"Event with id {event_id} not found")
         validators = [
             services.validators.CanJoinEventValidator(
                 user_id=types.UserId(user_id),
@@ -170,13 +149,7 @@ class LeaveEventUseCase(usecases.BaseUseCase):
     async def execute(self, event_id: uuid.UUID, user_id: uuid.UUID) -> None:
         event_aggregate = await self.event_repo.get_event(types.EventId(event_id))
         if not event_aggregate:
-            raise usecases.exc.NotFound(
-                details=[
-                    common_exc.ErrorDetail(
-                        message=f"Event with id {event_id} not found"
-                    ),
-                ],
-            )
+            raise usecases.exc.NotFound(message=f"Event with id {event_id} not found")
         validators = [
             services.validators.CanLeaveEventValidator(
                 user_id=types.UserId(user_id),

@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 
 from src.common import exc
@@ -14,29 +15,44 @@ class UseCaseErrorCode(enum.StrEnum):
     PASSWORD_VALIDATION_FAILED = "__USE_CASE_PASSWORD_VALIDATION_FAILED__"
 
 
+@dataclasses.dataclass(frozen=True)
 class UseCaseError(exc.BaseError):
     """Error in use case."""
 
-    default_msg = "Use case error"
-    code = UseCaseErrorCode.DEFAULT
+    detail: exc.ErrorDetail
 
 
 class NotFound(UseCaseError):
     """Object wasn't found."""
 
-    default_msg = "Object wasn't found"
-    code = UseCaseErrorCode.NOT_FOUND
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            detail=exc.ErrorDetail(
+                code=UseCaseErrorCode.NOT_FOUND,
+                messages=[message],
+            ),
+        )
 
 
 class Unauthorized(UseCaseError):
     """Unauthorized."""
 
-    default_msg = "Unauthorized"
-    code = UseCaseErrorCode.UNAUTHORIZED
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            detail=exc.ErrorDetail(
+                code=UseCaseErrorCode.UNAUTHORIZED,
+                messages=[message],
+            ),
+        )
 
 
 class PermissionDenied(UseCaseError):
     """Permission denied."""
 
-    default_msg = "Permission denied"
-    code = UseCaseErrorCode.PERMISSION_DENIED
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            detail=exc.ErrorDetail(
+                code=UseCaseErrorCode.PERMISSION_DENIED,
+                messages=[message],
+            ),
+        )

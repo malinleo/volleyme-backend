@@ -1,15 +1,14 @@
-import sqlalchemy.exc
 import sqlalchemy.orm
 
-from src.common import exc as common_exc
-from src.common import repos as common_repos
 from src.volleyme.application import dto, query_repos
 from src.volleyme.domain import aggregates, enums, repos, types
 from src.volleyme.infra.db import models
 
+from . import base
+
 
 class EventRepo(
-    common_repos.SQLAlchemyIdModelRepo,
+    base.SQLAlchemyIdModelRepo,
     repos.EventRepo,
 ):
     """Event repository implementation."""
@@ -61,7 +60,7 @@ class EventRepo(
         return event
 
     async def get_event(self, event_id: types.EventId) -> aggregates.Event | None:
-        event_model = await self._try_get_one(
+        event_model, _ = await self._try_get_one(
             model_class=self._model_class,
             id=event_id,
             load_configs={
@@ -77,7 +76,7 @@ class EventRepo(
         return None
 
     async def get_events(self, limit: int, offset: int) -> list[aggregates.Event]:
-        event_models = await self._get_many(
+        event_models, _ = await self._get_many(
             model_class=self._model_class,
             where=(),
             order_by=(),
@@ -98,6 +97,12 @@ class EventRepo(
         event: aggregates.Event,
         create: bool = False,
     ) -> aggregates.Event:
+        existing_event_model: models.Event | None = None
+        if not create:
+            existing_event_model, _ = await self._try_get_one(
+                model_class=self._model_class,
+                id=event.id,
+            )
         event_model = models.Event(
             id=event.id,
             start_dt=event.start_dt,
@@ -118,29 +123,56 @@ class EventRepo(
             created_by_id=event.created_by,
             updated_by_id=event.updated_by,
         )
-        saved_event = self._parse_event_model(
-            await self._save(
-                event_model,
-                create=create,
-                load_configs={
-                    sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
-                        models.Game.teams,
-                    ),
-                    sqlalchemy.orm.joinedload(self._model_class.participants),
-                    sqlalchemy.orm.joinedload(self._model_class.hosts),
-                },
-            )
+        saved_event_model = await self._save(
+            event_model,
+            create=create,
+            load_configs={
+                sqlalchemy.orm.joinedload(self._model_class.games).joinedload(
+                    models.Game.teams,
+                ),
+                sqlalchemy.orm.joinedload(self._model_class.participants),
+                sqlalchemy.orm.joinedload(self._model_class.hosts),
+            },
         )
-        participants_rels = [
-            models.EventParticipantRel(event_id=event_model.id, user_id=participant)
-            for participant in event.participants
-        ]
-        hosts_rels = [
-            models.EventHostRel(event_id=event_model.id, user_id=host)
-            for host in event.hosts
-        ]
-        await self._bulk_save(participants_rels, create=create)
-        await self._bulk_save(hosts_rels, create=create)
+        saved_event = self._parse_event_model(saved_event_model)
+        await self._save_relations(
+            existing_instances=[
+                models.EventParticipantRel(
+                    event_id=saved_event_model.id,
+                    user_id=participant.id,
+                )
+                for participant in existing_event_model.participants
+            ]
+            if existing_event_model
+            else [],
+            new_instances=[
+                models.EventParticipantRel(
+                    event_id=saved_event_model.id,
+                    user_id=participant_id,
+                )
+                for participant_id in event.participants
+            ],
+            get_rel_id=lambda participant_rel: (
+                participant_rel.event_id,
+                participant_rel.user_id,
+            ),
+        )
+        await self._save_relations(
+            existing_instances=[
+                models.EventHostRel(event_id=saved_event_model.id, user_id=host.id)
+                for host in existing_event_model.hosts
+            ]
+            if existing_event_model
+            else [],
+            new_instances=[
+                models.EventHostRel(event_id=saved_event_model.id, user_id=host_id)
+                for host_id in event.hosts
+            ],
+            get_rel_id=lambda host_rel: (
+                host_rel.event_id,
+                host_rel.user_id,
+            ),
+        )
         return saved_event
 
     async def delete_event(self, event_id: types.EventId) -> None:
@@ -154,7 +186,7 @@ class EventRepo(
 
 
 class EventQueryRepo(
-    common_repos.SQLAlchemyIdModelRepo,
+    base.SQLAlchemyIdModelRepo,
     query_repos.EventQueryRepo,
 ):
     """Event query repository implementation."""
@@ -207,13 +239,8 @@ class EventQueryRepo(
                 ),
             )
         )
-        try:
-            result = await self._db_session.execute(query)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(
-                details=[common_exc.ErrorDetail(message=str(error))],
-            ) from error
-        event_model = result.unique().scalar_one_or_none()
+        result = await self._try_execute(query=query)
+        event_model = result.result.unique().scalar_one_or_none()
         if event_model:
             return dto.EventDetailsDto(
                 id=event_model.id,
@@ -303,13 +330,8 @@ class EventQueryRepo(
                 ),
             )
         )
-        try:
-            result = await self._db_session.execute(query)
-        except sqlalchemy.exc.SQLAlchemyError as error:
-            raise common_repos.exc.QueryError(
-                details=[common_exc.ErrorDetail(message=str(error))],
-            ) from error
-        event_models_list = result.unique().scalars().all()
+        result = await self._try_execute(query=query)
+        event_models_list = result.result.unique().scalars().all()
         return [
             dto.EventListDto(
                 id=event_model.id,
