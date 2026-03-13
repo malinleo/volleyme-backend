@@ -5,12 +5,9 @@
 2. Install docker on [linux](https://docs.docker.com/engine/install/binaries/#install-daemon-and-client-binaries-on-linux) or [macos](https://docs.docker.com/engine/install/binaries/#install-client-binaries-on-macos)
 3. Install [docker-compose](https://docs.docker.com/compose/install/linux/#install-using-the-repository)
 4. Copy `.sample.env` contents to `.env`
-
-Next steps are only for development setup
-
-5. Install `gcc` compiler
-6. Install [pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation)
-7. Install [poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
+5. (Only for contribution) Install `gcc` compiler
+6. (Only for contribution) Install [pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation)
+7. (Only for contribution) Install [poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 
 
 ## Project init for local development and debug
