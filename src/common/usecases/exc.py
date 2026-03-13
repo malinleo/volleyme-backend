@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import enum
 
@@ -15,11 +17,9 @@ class UseCaseErrorCode(enum.StrEnum):
     PASSWORD_VALIDATION_FAILED = "__USE_CASE_PASSWORD_VALIDATION_FAILED__"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class UseCaseError(exc.BaseError):
     """Error in use case."""
-
-    detail: exc.ErrorDetail
 
 
 class NotFound(UseCaseError):
@@ -27,10 +27,12 @@ class NotFound(UseCaseError):
 
     def __init__(self, message: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=UseCaseErrorCode.NOT_FOUND,
-                messages=[message],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=UseCaseErrorCode.NOT_FOUND,
+                    messages=[message],
+                )
+            ],
         )
 
 
@@ -39,10 +41,12 @@ class Unauthorized(UseCaseError):
 
     def __init__(self, message: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=UseCaseErrorCode.UNAUTHORIZED,
-                messages=[message],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=UseCaseErrorCode.UNAUTHORIZED,
+                    messages=[message],
+                )
+            ],
         )
 
 
@@ -51,8 +55,10 @@ class PermissionDenied(UseCaseError):
 
     def __init__(self, message: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=UseCaseErrorCode.PERMISSION_DENIED,
-                messages=[message],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=UseCaseErrorCode.PERMISSION_DENIED,
+                    messages=[message],
+                )
+            ],
         )

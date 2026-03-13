@@ -36,7 +36,7 @@ class UserRepo(
 
     async def get_user(self, user_id: types.UserId) -> aggregates.User | None:
         user_model, _ = await self._try_get_one(
-            id=user_id,
+            id=(user_id,),
             model_class=self._model_class,
             load_configs={sqlalchemy.orm.joinedload(self._model_class.profile)},
         )

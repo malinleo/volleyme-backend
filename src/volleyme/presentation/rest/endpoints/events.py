@@ -24,9 +24,10 @@ async def get_event(
     ],
     event_id: uuid.UUID,
     user: deps.AuthUserDependencyType,
+    invitation_token: str = fastapi.Query(default=None),
 ):
     return schemas.EventDetailResponse.model_validate(
-        await usecase.execute(event_id, user.id),
+        await usecase.execute(event_id, user.id, invitation_token),
     )
 
 
@@ -42,9 +43,11 @@ async def get_events(
         fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.get_events]]),
     ],
     user: deps.AuthUserDependencyType,
-    pagination_params: schemas.PaginationParams = fastapi.Depends(
-        deps.get_pagination_params,
-    ),
+    pagination_params: typing.Annotated[
+        schemas.PaginationParams,
+        fastapi.Depends(deps.get_pagination_params),
+    ],
+    only_my_events: bool = fastapi.Query(default=False),
 ):
     return schemas.PaginatedResponse.build(
         request,
@@ -55,6 +58,7 @@ async def get_events(
                 user.id,
                 pagination_params.limit,
                 pagination_params.offset,
+                only_my_events,
             )
         ],
     )
@@ -72,6 +76,25 @@ async def create_event(
 ):
     return schemas.EventDetailResponse.model_validate(
         await usecase.execute(dto.CreateEventDto.model_validate(event), user.id),
+    )
+
+
+@events_router.post(
+    "/{event_id}/change-privacy/",
+    response_model=schemas.EventDetailResponse,
+)
+@wiring.inject
+async def change_privacy(
+    usecase: typing.Annotated[
+        usecases.ChangePrivacyUseCase,
+        fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.change_privacy]]),
+    ],
+    event_id: uuid.UUID,
+    change_privacy_data: schemas.ChangePrivacyRequest,
+    user: deps.AuthUserDependencyType,
+):
+    return schemas.EventDetailResponse.model_validate(
+        await usecase.execute(event_id, user.id, change_privacy_data.is_public),
     )
 
 

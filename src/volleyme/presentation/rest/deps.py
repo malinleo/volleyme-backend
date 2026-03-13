@@ -22,7 +22,7 @@ async def authenticate_user(
         fastapi.security.HTTPAuthorizationCredentials,
         fastapi.Depends(auth.auth),
     ],
-) -> app_services.AuthUser:
+) -> app_services.auth.AuthUser:
     auth_usecase: usecases.AuthUseCase = container.usecases.authenticate(
         auth_strategy__credentials=services.JWTCredentials(
             token=credentials.credentials,
@@ -46,6 +46,6 @@ AuthUserDependency: fastapi.params.Depends = fastapi.Depends(
     authenticate_user,
 )
 AuthUserDependencyType: typing.TypeAlias = typing.Annotated[
-    app_services.AuthUser,
+    app_services.auth.AuthUser,
     AuthUserDependency,
 ]

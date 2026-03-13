@@ -34,6 +34,9 @@ class Settings(pydantic_settings.BaseSettings):
     PASSWORD_MIN_LENGTH: int = 8
     PASSWORD_MAX_LENGTH: int = 100
 
+    # Event invitation settings
+    EVENT_INVITATION_EXPIRATION_SECONDS: int = 1 * 24 * 60 * 60  # 1 day in seconds
+
     @functools.cached_property
     def db_url(self) -> str:
         return f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

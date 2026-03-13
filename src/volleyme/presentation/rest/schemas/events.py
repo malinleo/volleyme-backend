@@ -23,6 +23,7 @@ class EventDetailResponse(schemas.BaseSchema):
     description: str
     participants: list[EventParticipantResponse]
     hosts: list[EventParticipantResponse]
+    is_public: bool
 
     image_urls: list[str]
     country: str = pydantic.Field(max_length=2)
@@ -45,6 +46,7 @@ class EventListResponse(schemas.BaseSchema):
     price: decimal.Decimal
     participants_count: int
     my_role: enums.EventParticipantRole
+    is_public: bool
 
     image_urls: list[str]
     country: str
@@ -61,6 +63,7 @@ class CreateEventRequest(schemas.BaseSchema):
     max_participants_count: int = pydantic.Field(gt=0)
     price: decimal.Decimal = pydantic.Field(ge=0)
     description: str
+    is_public: bool = pydantic.Field(default=True)
 
     # Auto filled for now
     image_urls: list[str] = pydantic.Field(default_factory=list)
@@ -68,3 +71,7 @@ class CreateEventRequest(schemas.BaseSchema):
     currency: str = pydantic.Field(max_length=3, default="RUB")
     game_type: enums.GameType = enums.GameType.VOLLEYBALL
     format_type: enums.EventFormatType = enums.EventFormatType.DEFAULT
+
+
+class ChangePrivacyRequest(schemas.BaseSchema):
+    is_public: bool

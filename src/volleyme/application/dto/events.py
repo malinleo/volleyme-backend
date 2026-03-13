@@ -22,6 +22,7 @@ class CreateEventDto(dto.BaseDto):
     country: str = pydantic.Field(max_length=2)
     game_type: enums.GameType
     format_type: enums.EventFormatType
+    is_public: bool
 
 
 class ParticipantInfoDto(dto.BaseDto):
@@ -39,6 +40,7 @@ class EventListDto(dto.BaseDto):
     price: decimal.Decimal = pydantic.Field(ge=0)
     participants_count: int = pydantic.Field(gt=0)
     my_role: enums.EventParticipantRole
+    is_public: bool
 
     image_urls: list[str]
     country: str = pydantic.Field(max_length=2)
@@ -63,5 +65,6 @@ class EventDetailsDto(dto.BaseDto):
     country: str = pydantic.Field(max_length=2)
     game_type: enums.GameType
     format_type: enums.EventFormatType
+    is_public: bool
     participants: list[ParticipantInfoDto]
     hosts: list[ParticipantInfoDto]

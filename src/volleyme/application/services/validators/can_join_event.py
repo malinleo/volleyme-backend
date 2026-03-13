@@ -8,21 +8,11 @@ from src.volleyme.domain import aggregates, types
 class CanJoinEventValidator(common_usecases.Validator):
     user_id: types.UserId
     event: aggregates.Event
+    invitation: aggregates.EventInvitation | None
 
     def validate(self) -> common_usecases.ValidationResult:
-        if self.event.is_started:
-            return common_usecases.ValidationResult(
-                is_valid=False,
-                error_msg="Event is already started",
-            )
-        if self.event.max_participants_count <= len(self.event.participants):
-            return common_usecases.ValidationResult(
-                is_valid=False,
-                error_msg="Event is already full",
-            )
-        if self.user_id in self.event.participants:
-            return common_usecases.ValidationResult(
-                is_valid=False,
-                error_msg="You are already a participant of the event",
-            )
+        if self.event.is_public:
+            return common_usecases.ValidationResult(is_valid=True)
+        if not self.invitation:
+            return common_usecases.ValidationResult(is_valid=False)
         return common_usecases.ValidationResult(is_valid=True)

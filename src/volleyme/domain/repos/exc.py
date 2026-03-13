@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 
 from src.common import exc
@@ -12,11 +13,9 @@ class ErrorCode(enum.StrEnum):
     REPO_QUERY = "REPO_QUERY_ERROR"
 
 
+@dataclasses.dataclass
 class RepoError(exc.BaseError):
     """Error in repository."""
-
-    def __init__(self, detail: exc.ErrorDetail) -> None:
-        super().__init__(detail=detail)
 
 
 class QueryError(RepoError):
@@ -24,10 +23,12 @@ class QueryError(RepoError):
 
     def __init__(self, query: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=ErrorCode.REPO_QUERY,
-                messages=[f"Error while executing query\nQuery: {query}"],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=ErrorCode.REPO_QUERY,
+                    messages=[f"Error while executing query\nQuery: {query}"],
+                )
+            ],
         )
 
 
@@ -36,10 +37,12 @@ class NotFoundError(RepoError):
 
     def __init__(self, query: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=ErrorCode.REPO_NOT_FOUND,
-                messages=[f"Object wasn't found\nQuery: {query}"],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=ErrorCode.REPO_NOT_FOUND,
+                    messages=[f"Object wasn't found\nQuery: {query}"],
+                )
+            ],
         )
 
 
@@ -48,10 +51,12 @@ class SaveError(RepoError):
 
     def __init__(self, query: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=ErrorCode.REPO_SAVE,
-                messages=[f"Object save error\nQuery: {query}"],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=ErrorCode.REPO_SAVE,
+                    messages=[f"Object save error\nQuery: {query}"],
+                )
+            ],
         )
 
 
@@ -60,8 +65,10 @@ class DeleteError(RepoError):
 
     def __init__(self, query: str) -> None:
         super().__init__(
-            detail=exc.ErrorDetail(
-                code=ErrorCode.REPO_DELETE,
-                messages=[f"Object deletion error\nQuery: {query}"],
-            ),
+            details=[
+                exc.ErrorDetail(
+                    code=ErrorCode.REPO_DELETE,
+                    messages=[f"Object deletion error\nQuery: {query}"],
+                )
+            ],
         )

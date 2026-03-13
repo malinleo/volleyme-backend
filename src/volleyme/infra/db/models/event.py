@@ -11,6 +11,7 @@ from src.common.models import base as base_models
 from src.volleyme.domain import enums
 
 if typing.TYPE_CHECKING:
+    from .event_invitation import EventInvitation
     from .game import Game
     from .user import User
 
@@ -105,6 +106,18 @@ class Event(
         back_populates="updated_events",
         foreign_keys=[updated_by_id],
     )
+    is_public: sqlalchemy.orm.Mapped[bool] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.Boolean,
+        server_default=sqlalchemy.true(),
+    )
+    invitations: sqlalchemy.orm.Mapped[list[EventInvitation]] = (
+        sqlalchemy.orm.relationship(
+            "EventInvitation",
+            back_populates="event",
+            foreign_keys="EventInvitation.event_id",
+            lazy="raise",
+        )
+    )
 
     participants_count: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.query_expression()  # type: ignore
     my_role: sqlalchemy.orm.Mapped[enums.EventParticipantRole] = (
@@ -124,7 +137,9 @@ class EventParticipantRel(base_models.BaseModel):
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
-            "event.id", name="fk_event_participant_rel_event_id", ondelete="CASCADE"
+            "event.id",
+            name="fk_event_participant_rel_event_id",
+            ondelete="CASCADE",
         ),
         primary_key=True,
     )
@@ -134,7 +149,9 @@ class EventParticipantRel(base_models.BaseModel):
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
-            "user.id", name="fk_event_participant_rel_user_id", ondelete="CASCADE"
+            "user.id",
+            name="fk_event_participant_rel_user_id",
+            ondelete="CASCADE",
         ),
         primary_key=True,
     )
@@ -156,7 +173,9 @@ class EventHostRel(base_models.BaseModel):
 
     event_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
-            "event.id", name="fk_event_host_rel_event_id", ondelete="CASCADE"
+            "event.id",
+            name="fk_event_host_rel_event_id",
+            ondelete="CASCADE",
         ),
         primary_key=True,
     )
@@ -166,7 +185,9 @@ class EventHostRel(base_models.BaseModel):
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
-            "user.id", name="fk_event_host_rel_user_id", ondelete="CASCADE"
+            "user.id",
+            name="fk_event_host_rel_user_id",
+            ondelete="CASCADE",
         ),
         primary_key=True,
     )

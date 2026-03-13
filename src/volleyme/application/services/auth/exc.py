@@ -1,6 +1,7 @@
 import enum
 
 from src.common import exc as common_exc
+from src.volleyme.application.services import exc
 
 
 class AuthErrorCode(enum.StrEnum):
@@ -11,16 +12,8 @@ class AuthErrorCode(enum.StrEnum):
     EXPIRED_TOKEN = "__EXPIRED_TOKEN__"
 
 
-class AuthError(common_exc.BaseError):
+class AuthError(exc.ApplicationServiceError):
     """Error in authentication."""
-
-    def __init__(self, detail: common_exc.ErrorDetail) -> None:
-        super().__init__(
-            detail=common_exc.ErrorDetail(
-                code=AuthErrorCode.DEFAULT,
-                messages=["Authentication error"],
-            ),
-        )
 
 
 class InvalidToken(AuthError):
@@ -28,10 +21,12 @@ class InvalidToken(AuthError):
 
     def __init__(self) -> None:
         super().__init__(
-            detail=common_exc.ErrorDetail(
-                code=AuthErrorCode.INVALID_TOKEN,
-                messages=["Token is invalid"],
-            ),
+            details=[
+                common_exc.ErrorDetail(
+                    code=AuthErrorCode.INVALID_TOKEN,
+                    messages=["Token is invalid"],
+                )
+            ],
         )
 
 
@@ -40,8 +35,10 @@ class ExpiredToken(AuthError):
 
     def __init__(self) -> None:
         super().__init__(
-            detail=common_exc.ErrorDetail(
-                code=AuthErrorCode.EXPIRED_TOKEN,
-                messages=["Token has expired"],
-            ),
+            details=[
+                common_exc.ErrorDetail(
+                    code=AuthErrorCode.EXPIRED_TOKEN,
+                    messages=["Token has expired"],
+                )
+            ],
         )

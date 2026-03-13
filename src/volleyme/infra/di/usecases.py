@@ -9,7 +9,10 @@ class Usecases(containers.DeclarativeContainer):
     infra = providers.Container(infra.Infra)
     get_event_by_id = providers.Factory(
         usecases.GetEventByIdUseCase,
+        event_repo=infra.event_repo,
         event_query_repo=infra.event_query_repo,
+        event_invitation_repo=infra.event_invitation_repo,
+        token_service=infra.jwt_codec,
     )
     get_events = providers.Factory(
         usecases.GetEventsUseCase,
@@ -40,8 +43,21 @@ class Usecases(containers.DeclarativeContainer):
     join_event = providers.Factory(
         usecases.JoinEventUseCase,
         event_repo=infra.event_repo,
+        event_invitation_repo=infra.event_invitation_repo,
+        token_service=infra.jwt_codec,
     )
     leave_event = providers.Factory(
         usecases.LeaveEventUseCase,
         event_repo=infra.event_repo,
+    )
+    invite_to_event = providers.Factory(
+        usecases.InviteToEventUseCase,
+        event_repo=infra.event_repo,
+        event_invitation_repo=infra.event_invitation_repo,
+        token_service=infra.jwt_codec,
+    )
+    change_privacy = providers.Factory(
+        usecases.ChangePrivacyUseCase,
+        event_repo=infra.event_repo,
+        event_query_repo=infra.event_query_repo,
     )
