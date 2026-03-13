@@ -14,7 +14,7 @@ from src.volleyme.domain import repos
 
 ModelT = typing.TypeVar("ModelT", bound=models.BaseModel)
 RelatedModelT = typing.TypeVar("RelatedModelT", bound=models.BaseModel)
-IdDataT = typing.TypeVar("IdDataT")
+IdDataT = typing.TypeVar("IdDataT", bound=tuple[typing.Any, ...])
 
 
 ResultT = typing.TypeVar("ResultT")
@@ -64,7 +64,7 @@ class SQLAlchemyModelRepo(
         offset: int | None = None,
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
-        ] = set(),
+        ] = frozenset(),
     ) -> QueryResult[ModelT]:
         """Get result of select query."""
         query = (
@@ -106,32 +106,43 @@ class SQLAlchemyModelRepo(
                 query_str=query_str,
             )
         except sqlalchemy.exc.DBAPIError as error:
+            await self._db_session.rollback()
             raise repos.exc.QueryError(
                 query=error.statement or "Unknown query"
             ) from error
         except sqlalchemy.exc.SQLAlchemyError as error:
+            await self._db_session.rollback()
             raise repos.exc.RepoError(
-                detail=common_exc.ErrorDetail(
-                    code=repos.exc.ErrorCode.REPO,
-                    messages=[f"Sqlalchemy error: {error}"],
-                )
+                details=[
+                    common_exc.ErrorDetail(
+                        code=repos.exc.ErrorCode.REPO,
+                        messages=[f"Sqlalchemy error: {error}"],
+                    )
+                ],
             ) from error
 
     async def _try_get_one(
         self,
         id: IdDataT,
         model_class: type[ModelT],
+        where: collections.abc.Sequence[
+            sqlalchemy.ColumnExpressionArgument[typing.Any]
+        ] = tuple(),
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
-        ] = set(),
+        ] = frozenset(),
     ) -> tuple[ModelT | None, str]:
-        """Get one instance by or `None`."""
-        result = await self._run_select(
-            model_class=model_class,
-            where=self._build_model_ident_expressions(
-                id=(id,),
+        """Get one instance or `None`."""
+        where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = [
+            *self._build_model_ident_expressions(
+                id=id,
                 model_class=model_class,
             ),
+            *where,
+        ]
+        result = await self._run_select(
+            model_class=model_class,
+            where=where_exprs,
             load_configs=load_configs,
         )
         return result.result.unique().scalar_one_or_none(), result.query_str
@@ -140,6 +151,9 @@ class SQLAlchemyModelRepo(
         self,
         id: IdDataT,
         model_class: type[ModelT],
+        where: collections.abc.Sequence[
+            sqlalchemy.ColumnExpressionArgument[typing.Any]
+        ] = tuple(),
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
         ] = set(),
@@ -153,6 +167,7 @@ class SQLAlchemyModelRepo(
         instance, query_str = await self._try_get_one(
             id=id,
             model_class=model_class,
+            where=where,
             load_configs=load_configs,
         )
         if instance:
@@ -191,7 +206,7 @@ class SQLAlchemyModelRepo(
         create: bool = False,
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
-        ] = set(),
+        ] = frozenset(),
     ) -> ModelT:
         """Save instance to db."""
         model_class: type[ModelT] = type(instance)
@@ -202,15 +217,19 @@ class SQLAlchemyModelRepo(
         try:
             await self._db_session.flush()
         except sqlalchemy.exc.DBAPIError as error:
+            await self._db_session.rollback()
             raise repos.exc.SaveError(
                 query=error.statement or "Unknown query",
             ) from error
         except sqlalchemy.exc.SQLAlchemyError as error:
+            await self._db_session.rollback()
             raise repos.exc.RepoError(
-                detail=common_exc.ErrorDetail(
-                    code=repos.exc.ErrorCode.REPO,
-                    messages=[f"Sqlalchemy error: {error}"],
-                )
+                details=[
+                    common_exc.ErrorDetail(
+                        code=repos.exc.ErrorCode.REPO,
+                        messages=[f"Sqlalchemy error: {error}"],
+                    )
+                ],
             ) from error
         result = await self._get_many(
             model_class=model_class,
@@ -229,7 +248,7 @@ class SQLAlchemyModelRepo(
         create: bool = False,
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
-        ] = set(),
+        ] = frozenset(),
     ) -> collections.abc.Sequence[ModelT]:
         """Save multiple instances."""
         if not instances:
@@ -243,15 +262,19 @@ class SQLAlchemyModelRepo(
         try:
             await self._db_session.flush()
         except sqlalchemy.exc.DBAPIError as error:
+            await self._db_session.rollback()
             raise repos.exc.SaveError(
                 query=error.statement or "Unknown query",
             ) from error
         except sqlalchemy.exc.SQLAlchemyError as error:
+            await self._db_session.rollback()
             raise repos.exc.RepoError(
-                detail=common_exc.ErrorDetail(
-                    code=repos.exc.ErrorCode.REPO,
-                    messages=[f"Sqlalchemy error: {error}"],
-                )
+                details=[
+                    common_exc.ErrorDetail(
+                        code=repos.exc.ErrorCode.REPO,
+                        messages=[f"Sqlalchemy error: {error}"],
+                    )
+                ],
             ) from error
         where_exprs: list[sqlalchemy.ColumnExpressionArgument[typing.Any]] = []
         for instance in instances:
@@ -317,7 +340,7 @@ class SQLAlchemyModelRepo(
         get_rel_id: collections.abc.Callable[[ModelT], tuple[typing.Any, ...]],
         load_configs: collections.abc.Set[
             sqlalchemy.orm.strategy_options._AbstractLoad
-        ] = set(),
+        ] = frozenset(),
     ) -> tuple[collections.abc.Sequence[ModelT], collections.abc.Sequence[ModelT]]:
         """Save relations between instances."""
         old_instances_ids = {get_rel_id(instance) for instance in existing_instances}
@@ -342,5 +365,5 @@ class SQLAlchemyModelRepo(
 IdModelT = typing.TypeVar("IdModelT", bound=models.IDModel)
 
 
-class SQLAlchemyIdModelRepo(SQLAlchemyModelRepo[uuid.UUID]):
+class SQLAlchemyIdModelRepo(SQLAlchemyModelRepo[tuple[uuid.UUID]]):
     """Base repo class for default id models."""

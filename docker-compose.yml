@@ -10,6 +10,20 @@ services:
       - "8000:8000"
     env_file:
       - .env
+
+  volleyme-migrate:
+    image: volleyme-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+    entrypoint: ["alembic", "upgrade", "head"]
   
   postgres:
     image: postgres:18-alpine

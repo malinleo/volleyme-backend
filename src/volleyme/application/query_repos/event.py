@@ -20,6 +20,7 @@ class EventQueryRepo(typing.Protocol):
         user_id: types.UserId,
         limit: int,
         offset: int,
+        only_my_events: bool = ...,
     ) -> list[dto.EventListDto]:
         """Get events info."""
         ...

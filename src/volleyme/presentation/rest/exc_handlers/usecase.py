@@ -12,7 +12,7 @@ def handle_use_case_error(
 ) -> fastapi.responses.JSONResponse:
     """Handle use case error."""
     return fastapi.responses.JSONResponse(
-        content={"detail": dataclasses.asdict(exc.detail)},
+        content={"details": [dataclasses.asdict(detail) for detail in exc.details]},
         status_code=status.HTTP_400_BAD_REQUEST,
     )
 
@@ -23,7 +23,7 @@ def handle_not_found_error(
 ) -> fastapi.responses.JSONResponse:
     """Handle use case error."""
     return fastapi.responses.JSONResponse(
-        content={"detail": dataclasses.asdict(exc.detail)},
+        content={"details": [dataclasses.asdict(detail) for detail in exc.details]},
         status_code=status.HTTP_404_NOT_FOUND,
     )
 
@@ -34,7 +34,7 @@ def handle_unauthorized_error(
 ) -> fastapi.responses.JSONResponse:
     """Handle use case error."""
     return fastapi.responses.JSONResponse(
-        content={"detail": dataclasses.asdict(exc.detail)},
+        content={"details": [dataclasses.asdict(detail) for detail in exc.details]},
         status_code=status.HTTP_401_UNAUTHORIZED,
     )
 
@@ -45,6 +45,6 @@ def handle_permission_denied_error(
 ) -> fastapi.responses.JSONResponse:
     """Handle use case error."""
     return fastapi.responses.JSONResponse(
-        content={"detail": dataclasses.asdict(exc.detail)},
+        content={"details": [dataclasses.asdict(detail) for detail in exc.details]},
         status_code=status.HTTP_403_FORBIDDEN,
     )

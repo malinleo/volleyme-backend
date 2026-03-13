@@ -75,3 +75,7 @@ class Infra(containers.DeclarativeContainer):
             ),
         ],
     )
+    event_invitation_repo = providers.Factory(
+        repos.EventInvitationRepo,
+        db_session=db_session,
+    )

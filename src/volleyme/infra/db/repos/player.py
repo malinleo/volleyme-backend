@@ -25,7 +25,7 @@ class PlayerRepo(
     async def get_player(self, player_id: types.PlayerId) -> aggregates.Player | None:
         player_model, _ = await self._try_get_one(
             model_class=self._model_class,
-            id=player_id,
+            id=(player_id,),
         )
         if player_model:
             return self._parse_player_model(player_model)
