@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-RUN apt update && apt install -y gcc
+RUN apt update && apt install -y gcc openssh-client openssl
 
 ENV HOST=0.0.0.0
 ENV PORT=8000
@@ -11,7 +11,7 @@ ENV PYTHON_ARGS="--enable-optimizations --with-tail-call-interp"
 WORKDIR /src
 
 # Copy only poetry related files to avoid long rebuild on each file change
-COPY ./pyproject.toml ./poetry.lock ./docker-entrypoint.sh /src/
+COPY ./pyproject.toml ./poetry.lock /src/
 # Install deps with poetry
 RUN pip install poetry && \
     poetry config virtualenvs.create false && \

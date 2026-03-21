@@ -5,7 +5,7 @@
 2. Install docker on [linux](https://docs.docker.com/engine/install/binaries/#install-daemon-and-client-binaries-on-linux) or [macos](https://docs.docker.com/engine/install/binaries/#install-client-binaries-on-macos)
 3. Install [docker-compose](https://docs.docker.com/compose/install/linux/#install-using-the-repository)
 4. Copy `.sample.env` contents to `.env`
-5. (Only for contribution) Install `gcc` compiler
+5. (Only for contribution) Install `gcc`, `openssl`, `openssh-client`
 6. (Only for contribution) Install [pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation)
 7. (Only for contribution) Install [poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 
@@ -27,6 +27,10 @@ docker-compose up -d postgres
 # Run migrations
 alembic upgrade head
 ```
+4. Create key pair for JWT
+```bash
+inv utils.create-jwt-key-pair
+```
 4. You can run server with uvicorn command now
 ```bash
 uvicorn src.volleyme.presentation.rest.main:app --host 0.0.0.0 --port 8000 --reload
@@ -40,11 +44,15 @@ uvicorn src.volleyme.presentation.rest.main:app --host 0.0.0.0 --port 8000 --rel
 ```bash
 docker-compose build volleyme-backend
 ```
-2. Run migrations
+2. Up database
 ```bash
-docker-compose up volleyme-migrate
+docker-compose up -d postgres
 ```
-3. Run app, it will run on host/port specified in `.env` file
+3. Run migrations + preparation scripts
+```bash
+docker-compose up volleyme-migrate volleyme-prepare
+```
+4. Run app, it will run on host/port specified in `.env` file
 ```bash
 docker-compose up volleyme-backend
 ```

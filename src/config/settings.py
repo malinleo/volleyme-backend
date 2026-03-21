@@ -37,6 +37,12 @@ class Settings(pydantic_settings.BaseSettings):
     # Event invitation settings
     EVENT_INVITATION_EXPIRATION_SECONDS: int = 1 * 24 * 60 * 60  # 1 day in seconds
 
+    model_config = pydantic_settings.SettingsConfigDict(
+        extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
+
     @functools.cached_property
     def db_url(self) -> str:
         return f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
@@ -54,10 +60,6 @@ class Settings(pydantic_settings.BaseSettings):
             with open(self.JWT_PRIVATE_KEY_PATH, "r") as jwt_private_key_file:
                 self._jwt_private_key = jwt_private_key_file.read()
         return self._jwt_private_key
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 settings = Settings()  # type: ignore
