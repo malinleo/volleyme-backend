@@ -21,4 +21,4 @@ COPY . /src
 
 RUN chmod +x /src/docker-entrypoint.sh
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["bash", "./docker-entrypoint.sh"]
