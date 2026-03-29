@@ -87,23 +87,28 @@ class CreateEventUseCase(usecases.BaseUseCase):
         creator_id: uuid.UUID,
     ) -> dto.EventDetailsDto:
         creator_user_id = types.UserId(creator_id)
-        new_event = aggregates.Event.create(
-            title=event.title,
-            start_dt=event.start_dt,
-            end_dt=event.end_dt,
-            game_type=event.game_type,
-            format_type=event.format_type,
-            max_participants_count=event.max_participants_count,
-            country=event.country,
-            city=event.city,
-            address=event.address,
-            description=event.description,
-            price=event.price,
-            currency=event.currency,
-            image_urls=event.image_urls,
-            creator_user_id=creator_user_id,
-            is_public=event.is_public,
-        )
+        try:
+            new_event = aggregates.Event.create(
+                title=event.title,
+                start_dt=event.start_dt,
+                end_dt=event.end_dt,
+                game_type=event.game_type,
+                format_type=event.format_type,
+                max_participants_count=event.max_participants_count,
+                country=event.country,
+                city=event.city,
+                address=event.address,
+                description=event.description,
+                price=event.price,
+                currency=event.currency,
+                image_urls=event.image_urls,
+                creator_user_id=creator_user_id,
+                is_public=event.is_public,
+            )
+        except domain_exc.DomainError as domain_error:
+            raise usecases.exc.UseCaseError.from_error(
+                domain_error,
+            ) from domain_error
         try:
             event_aggregate = await self.event_repo.save_event(new_event, create=True)
         except repos.exc.RepoError as e:

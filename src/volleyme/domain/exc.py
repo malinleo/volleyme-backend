@@ -36,8 +36,13 @@ class EventEndBeforeStartError(DomainError):
             details=[
                 exc.ErrorDetail(
                     code=ErrorCode.EVENT_END_BEFORE_START,
+                    messages=["Event end date must be after start date"],
                     fields={
                         "start_dt": exc.FieldErrorDetail(
+                            code=ErrorCode.EVENT_END_BEFORE_START,
+                            messages=["Event end date must be after start date"],
+                        ),
+                        "end_dt": exc.FieldErrorDetail(
                             code=ErrorCode.EVENT_END_BEFORE_START,
                             messages=["Event end date must be after start date"],
                         ),
