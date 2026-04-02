@@ -38,6 +38,7 @@ class Usecases(containers.DeclarativeContainer):
     register = providers.Factory(
         usecases.EmailPasswordRegisterUseCase,
         user_repo=infra.user_repo,
+        user_query_repo=infra.user_query_repo,
         password_validator=infra.password_validator,
     )
     join_event = providers.Factory(
