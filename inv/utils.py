@@ -29,13 +29,3 @@ def create_jwt_key_pair(
         )
         # Restrict private key permissions
         context.run(f"chmod 600 {private_key_file}")
-
-
-@invoke.tasks.task
-def chmod(
-    context: invoke.context.Context,
-    path: str,
-    mode: str = "600",
-):
-    """Chmod a path."""
-    context.run(f"sudo chmod {mode} {path}")

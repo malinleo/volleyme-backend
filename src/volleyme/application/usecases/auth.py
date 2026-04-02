@@ -2,7 +2,7 @@ import dataclasses
 
 from src.common import exc as common_exc
 from src.common import usecases
-from src.volleyme.application import services
+from src.volleyme.application import query_repos, services
 from src.volleyme.domain import aggregates, repos
 
 from . import exc
@@ -39,9 +39,19 @@ class AuthUseCase:
 @dataclasses.dataclass
 class EmailPasswordRegisterUseCase:
     user_repo: repos.UserRepo
+    user_query_repo: query_repos.UserQueryRepo
     password_validator: services.auth.PasswordValidator
 
     async def execute(self, email: str, password: str) -> services.auth.AuthUser:
+        if user := await self.user_query_repo.get_user_auth_info(email):
+            raise usecases.exc.UseCaseError(
+                details=[
+                    common_exc.ErrorDetail(
+                        code=usecases.exc.UseCaseErrorCode.USER_ALREADY_EXISTS,
+                        messages=["User with given email already exists"],
+                    )
+                ],
+            )
         validation_results = self.password_validator.validate(password)
         if not validation_results.is_valid:
             raise exc.PasswordValidationFailed(validation_results)
@@ -53,5 +63,12 @@ class EmailPasswordRegisterUseCase:
                 aggregates.User(email=email, password_hash=password_hash),
             )
         except repos.exc.RepoError as repo_error:
-            raise usecases.exc.UseCaseError.from_error(repo_error) from repo_error
+            raise usecases.exc.UseCaseError(
+                details=[
+                    common_exc.ErrorDetail(
+                        code=usecases.exc.UseCaseErrorCode.DEFAULT,
+                        messages=["Failed to register user"],
+                    )
+                ],
+            ) from repo_error
         return services.auth.AuthUser(id=user.id)
