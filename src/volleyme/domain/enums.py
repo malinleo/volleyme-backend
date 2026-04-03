@@ -11,7 +11,7 @@ class EventFormatType(enum.IntEnum):
     TRAINING = 2
 
 
-class EventParticipantRole(enum.IntEnum):
-    HOST = 0
-    PARTICIPANT = 1
-    NOBODY = 2
+class EventParticipantRole(enum.StrEnum):
+    HOST = "host"
+    PARTICIPANT = "participant"
+    NOBODY = "nobody"
