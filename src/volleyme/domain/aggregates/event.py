@@ -94,7 +94,7 @@ class Event(
         )
 
     def _validate_start_before_end(self) -> None:
-        if self.start_dt >= self.end_dt:
+        if self.start_dt > self.end_dt:
             raise exc.EventEndBeforeStartError()
 
     def check_is_finished(self, current_dt: datetime.datetime) -> bool:
