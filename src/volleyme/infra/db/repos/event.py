@@ -224,7 +224,9 @@ class EventQueryRepo(
                         participant.profile.avatar_url if participant.profile else None
                     ),
                     name=(
-                        participant.profile.full_name if participant.profile else None
+                        participant.profile.full_name or participant.username
+                        if participant.profile
+                        else participant.username
                     ),
                 )
                 for participant in event_model.participants
@@ -233,7 +235,9 @@ class EventQueryRepo(
                 dto.ParticipantInfoDto(
                     id=host.id,
                     avatar_url=host.profile.avatar_url if host.profile else None,
-                    name=host.profile.full_name if host.profile else None,
+                    name=host.profile.full_name or host.username
+                    if host.profile
+                    else host.username,
                 )
                 for host in event_model.hosts
             ],

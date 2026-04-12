@@ -10,8 +10,8 @@ from . import token
 
 
 @dataclasses.dataclass(frozen=True)
-class EmailPasswordCredentials:
-    email: str
+class UsernamePasswordCredentials:
+    username: str
     password: str
 
 
@@ -31,13 +31,13 @@ class JWTAuthStrategy(services.auth.AuthStrategy):
 
 
 @dataclasses.dataclass(frozen=True)
-class EmailPasswordAuthStrategy(services.auth.AuthStrategy):
-    credentials: EmailPasswordCredentials
+class UsernamePasswordAuthStrategy(services.auth.AuthStrategy):
+    credentials: UsernamePasswordCredentials
     user_query_repo: query_repos.UserQueryRepo
 
     async def authenticate(self) -> services.auth.AuthUser | None:
         user_auth_info = await self.user_query_repo.get_user_auth_info(
-            self.credentials.email
+            self.credentials.username,
         )
         if user_auth_info and services.auth.verify_password(
             self.credentials.password,

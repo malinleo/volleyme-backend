@@ -1,5 +1,5 @@
 from .auth import AuthUseCase as AuthUseCase
-from .auth import EmailPasswordRegisterUseCase as EmailPasswordRegisterUseCase
+from .auth import RegisterUseCase as RegisterUseCase
 from .events import ChangePrivacyUseCase as ChangePrivacyUseCase
 from .events import CreateEventUseCase as CreateEventUseCase
 from .events import DeleteEventUseCase as DeleteEventUseCase
