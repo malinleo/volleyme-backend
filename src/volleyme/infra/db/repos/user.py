@@ -18,7 +18,7 @@ class UserRepo(
     def _parse_user_model(self, user_model: models.User) -> aggregates.User:
         user = aggregates.User(
             id=types.UserId(user_model.id),
-            email=user_model.email,
+            username=user_model.username,
             password_hash=aggregates.PasswordHash(value=user_model.password),
             created_at=user_model.created_at,
             updated_at=user_model.updated_at,
@@ -76,7 +76,7 @@ class UserRepo(
     ) -> aggregates.User:
         user_model = models.User(
             id=user.id,
-            email=user.email,
+            username=user.username,
             password=user.password_hash.value,
         )
         if user.profile:
@@ -111,16 +111,16 @@ class UserQueryRepo(
 
     _model_class = models.User
 
-    async def get_user_auth_info(self, email: str) -> dto.UserAuthDto | None:
+    async def get_user_auth_info(self, username: str) -> dto.UserAuthDto | None:
         query = sqlalchemy.select(self._model_class).where(
-            self._model_class.email == email,
+            self._model_class.username == username,
         )
         result = await self._try_execute(query=query)
         user_model = result.result.unique().scalar_one_or_none()
         if user_model:
             return dto.UserAuthDto(
                 id=types.UserId(user_model.id),
-                email=user_model.email,
+                username=user_model.username,
                 password=user_model.password,
             )
         return None

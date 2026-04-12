@@ -1,6 +1,6 @@
-from .auth import EmailPasswordLoginRequest as EmailPasswordLoginRequest
-from .auth import EmailPasswordRegisterRequest as EmailPasswordRegisterRequest
 from .auth import JWTAuthTokenResponse as JWTAuthTokenResponse
+from .auth import LoginRequest as LoginRequest
+from .auth import RegisterRequest as RegisterRequest
 from .events import ChangePrivacyRequest as ChangePrivacyRequest
 from .events import CreateEventRequest as CreateEventRequest
 from .events import EventDetailResponse as EventDetailResponse

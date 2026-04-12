@@ -36,7 +36,7 @@ class Infra(containers.DeclarativeContainer):
     )
     user_query_repo = providers.Factory(repos.UserQueryRepo, db_session=db_session)
     login_auth_strategy = providers.Factory(
-        services.EmailPasswordAuthStrategy,
+        services.UsernamePasswordAuthStrategy,
         user_query_repo=user_query_repo,
     )
     generate_auth_token_strategy = providers.Factory(

@@ -4,6 +4,7 @@ from src.common import exc as common_exc
 from src.common import usecases
 from src.volleyme.application import query_repos, services
 from src.volleyme.domain import aggregates, repos
+from src.volleyme.domain import exc as domain_exc
 
 from . import exc
 
@@ -30,18 +31,25 @@ class AuthUseCase:
 
 
 @dataclasses.dataclass
-class EmailPasswordRegisterUseCase:
+class RegisterUseCase:
     user_repo: repos.UserRepo
     user_query_repo: query_repos.UserQueryRepo
     password_validator: services.auth.PasswordValidator
 
-    async def execute(self, email: str, password: str) -> services.auth.AuthUser:
-        if user := await self.user_query_repo.get_user_auth_info(email):
+    async def execute(
+        self,
+        username: str,
+        password: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        avatar_url: str | None = None,
+    ) -> services.auth.AuthUser:
+        if user := await self.user_query_repo.get_user_auth_info(username):
             raise usecases.exc.UseCaseError(
                 details=[
                     common_exc.ErrorDetail(
                         code=usecases.exc.UseCaseErrorCode.USER_ALREADY_EXISTS,
-                        messages=["User with given email already exists"],
+                        messages=["User with given username already exists"],
                     )
                 ],
             )
@@ -52,9 +60,17 @@ class EmailPasswordRegisterUseCase:
             value=services.auth.make_password_hash(password),
         )
         try:
-            user = await self.user_repo.save_user(
-                aggregates.User(email=email, password_hash=password_hash),
+            user = aggregates.User.create(
+                username=username,
+                password_hash=password_hash,
+                first_name=first_name,
+                last_name=last_name,
+                avatar_url=avatar_url,
             )
+        except domain_exc.DomainError as domain_error:
+            raise usecases.exc.UseCaseError.from_error(domain_error) from domain_error
+        try:
+            user = await self.user_repo.save_user(user)
         except repos.exc.RepoError as repo_error:
             raise usecases.exc.UseCaseError(
                 details=[

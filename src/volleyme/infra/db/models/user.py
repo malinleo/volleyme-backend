@@ -18,10 +18,10 @@ class User(
     base_models.TimeStampedModel,
 ):
     __tablename__ = "user"
+    __table_args__ = (sqlalchemy.UniqueConstraint("username", name="unique_username"),)
 
-    email: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.String(254),
-        unique=True,
+    username: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+        sqlalchemy.String(255),
     )
     password: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Text,

@@ -4,5 +4,5 @@ from src.volleyme.domain import types
 
 class UserAuthDto(dto.BaseDto):
     id: types.UserId
-    email: str
+    username: str
     password: str

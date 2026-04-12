@@ -23,16 +23,21 @@ class Profile(
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
     )
-    first_name: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+    first_name: sqlalchemy.orm.Mapped[str | None] = sqlalchemy.orm.mapped_column(
         sqlalchemy.String(100),
+        nullable=True,
     )
-    last_name: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+    last_name: sqlalchemy.orm.Mapped[str | None] = sqlalchemy.orm.mapped_column(
         sqlalchemy.String(100),
+        nullable=True,
     )
-    avatar_url: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
+    avatar_url: sqlalchemy.orm.Mapped[str | None] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Text,
+        nullable=True,
     )
 
     @property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+    def full_name(self) -> str | None:
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return None

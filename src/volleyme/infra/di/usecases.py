@@ -36,7 +36,7 @@ class Usecases(containers.DeclarativeContainer):
         auth_strategy=infra.login_auth_strategy,
     )
     register = providers.Factory(
-        usecases.EmailPasswordRegisterUseCase,
+        usecases.RegisterUseCase,
         user_repo=infra.user_repo,
         user_query_repo=infra.user_query_repo,
         password_validator=infra.password_validator,

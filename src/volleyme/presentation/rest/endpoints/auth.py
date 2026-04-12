@@ -13,8 +13,8 @@ auth_router = fastapi.APIRouter(prefix="/auth", tags=["auth"])
 
 @auth_router.post("/login/", response_model=schemas.JWTAuthTokenResponse)
 @wiring.inject
-async def email_password_login(
-    credentials: schemas.EmailPasswordLoginRequest,
+async def login(
+    credentials: schemas.LoginRequest,
     container: typing.Annotated[
         di.DI,
         fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.container]]),
@@ -26,8 +26,8 @@ async def email_password_login(
         ),
     ],
 ):
-    credentials_dto = services.EmailPasswordCredentials(
-        email=credentials.email,
+    credentials_dto = services.UsernamePasswordCredentials(
+        username=credentials.username,
         password=credentials.password,
     )
     login_usecase: usecases.AuthUseCase = await container.usecases.login(
@@ -44,10 +44,10 @@ async def email_password_login(
 
 @auth_router.post("/register/", response_model=schemas.JWTAuthTokenResponse)
 @wiring.inject
-async def email_password_register(
-    credentials: schemas.EmailPasswordRegisterRequest,
+async def register(
+    user_data: schemas.RegisterRequest,
     register_usecase: typing.Annotated[
-        usecases.EmailPasswordRegisterUseCase,
+        usecases.RegisterUseCase,
         fastapi.Depends(wiring.Closing[wiring.Provide[di.DI.usecases.register]]),
     ],
     generate_auth_token_strategy: typing.Annotated[
@@ -58,7 +58,13 @@ async def email_password_register(
     ],
 ):
     auth_token = await generate_auth_token_strategy.generate(
-        await register_usecase.execute(credentials.email, credentials.password)
+        await register_usecase.execute(
+            username=user_data.username,
+            password=user_data.password,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            avatar_url=user_data.avatar_url,
+        )
     )
     return schemas.JWTAuthTokenResponse(
         token_type=auth_token.schema,
