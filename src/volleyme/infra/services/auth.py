@@ -2,8 +2,6 @@ import dataclasses
 import datetime
 import uuid
 
-import jwt
-
 from src.volleyme.application import query_repos, services
 from src.volleyme.domain import types
 from src.volleyme.presentation import auth
@@ -28,12 +26,7 @@ class JWTAuthStrategy(services.auth.AuthStrategy):
     token_service: token.JWTCodecService
 
     async def authenticate(self) -> services.auth.AuthUser | None:
-        try:
-            payload = self.token_service.decode(self.credentials.token)
-        except jwt.exceptions.ExpiredSignatureError:
-            raise services.auth.exc.ExpiredToken()
-        except jwt.exceptions.PyJWTError:
-            raise services.auth.exc.InvalidToken()
+        payload = self.token_service.decode(self.credentials.token)
         return services.auth.AuthUser(id=types.UserId(uuid.UUID(payload["sub"])))
 
 

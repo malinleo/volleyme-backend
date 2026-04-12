@@ -15,31 +15,3 @@ class ApplicationServiceErrorCode(enum.StrEnum):
 @dataclasses.dataclass
 class ApplicationServiceError(common_exc.BaseError):
     """Base error for application services."""
-
-
-class InvalidToken(ApplicationServiceError):
-    """Invalid token."""
-
-    def __init__(self) -> None:
-        super().__init__(
-            details=[
-                common_exc.ErrorDetail(
-                    code=ApplicationServiceErrorCode.INVALID_TOKEN,
-                    messages=["Token is invalid"],
-                )
-            ],
-        )
-
-
-class ExpiredToken(ApplicationServiceError):
-    """Expired token."""
-
-    def __init__(self) -> None:
-        super().__init__(
-            details=[
-                common_exc.ErrorDetail(
-                    code=ApplicationServiceErrorCode.EXPIRED_TOKEN,
-                    messages=["Token has expired"],
-                )
-            ],
-        )
