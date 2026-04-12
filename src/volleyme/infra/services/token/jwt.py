@@ -31,6 +31,6 @@ class JWTCodecService(services.token.TokenService):
                 options={"verify_exp": True},
             )
         except jwt.exceptions.ExpiredSignatureError as error:
-            raise services.exc.ExpiredToken() from error
+            raise services.auth.exc.ExpiredToken() from error
         except jwt.exceptions.PyJWTError as error:
-            raise services.exc.InvalidToken() from error
+            raise services.auth.exc.InvalidToken() from error

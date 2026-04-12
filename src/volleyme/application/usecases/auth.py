@@ -15,15 +15,8 @@ class AuthUseCase:
     async def execute(self) -> services.auth.AuthUser:
         try:
             auth_user = await self.auth_strategy.authenticate()
-        except services.auth.exc.AuthError as auth_error:
-            raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=usecases.exc.UseCaseErrorCode.DEFAULT,
-                        messages=["Failed to authenticate"],
-                    )
-                ],
-            ) from auth_error
+        except services.exc.ApplicationServiceError as service_error:
+            raise usecases.exc.UseCaseError.from_error(service_error) from service_error
         if not auth_user:
             raise usecases.exc.UseCaseError(
                 details=[
