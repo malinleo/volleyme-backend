@@ -4,8 +4,8 @@ import uuid
 import fastapi
 from dependency_injector import wiring
 
+from src.volleyme import di
 from src.volleyme.application import dto, usecases
-from src.volleyme.infra import di
 from src.volleyme.presentation.rest import deps, schemas
 
 events_router = fastapi.APIRouter(

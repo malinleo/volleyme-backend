@@ -12,12 +12,17 @@ class JWTCodecService(services.token.TokenService):
     private_key: str
     algorithm: str = "ES256"
 
-    def encode(self, payload: dict[str, typing.Any]) -> str:
+    def encode(
+        self,
+        payload: dict[str, typing.Any],
+        extra_headers: dict[str, typing.Any] | None = None,
+    ) -> str:
+        extra_headers = extra_headers or {}
         return jwt.encode(
             payload,
             self.private_key,
             algorithm=self.algorithm,
-            headers={"alg": self.algorithm, "typ": "JWT"},
+            headers={**extra_headers, "alg": self.algorithm},
         )
 
     def decode(self, token: str | bytes) -> dict[str, typing.Any]:

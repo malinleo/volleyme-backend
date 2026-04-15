@@ -2,7 +2,7 @@ import pydantic
 
 from src.common import schemas
 from src.config import settings
-from src.volleyme.presentation import auth
+from src.volleyme.application import services
 
 
 class LoginRequest(schemas.BaseSchema):
@@ -19,5 +19,6 @@ class RegisterRequest(schemas.BaseSchema):
 
 
 class JWTAuthTokenResponse(schemas.BaseSchema):
-    token_type: auth.AuthTokenSchema
+    token_type: services.auth.AuthTokenSchema
     access_token: str
+    refresh_token: str
