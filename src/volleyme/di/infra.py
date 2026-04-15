@@ -35,14 +35,18 @@ class Infra(containers.DeclarativeContainer):
         token_service=jwt_codec,
     )
     user_query_repo = providers.Factory(repos.UserQueryRepo, db_session=db_session)
-    login_auth_strategy = providers.Factory(
-        services.UsernamePasswordAuthStrategy,
+    user_session_repo = providers.Factory(repos.UserSessionRepo, db_session=db_session)
+    login_strategy = providers.Factory(
+        services.UsernamePasswordLoginStrategy,
         user_query_repo=user_query_repo,
+        user_session_repo=user_session_repo,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRES_IN,
     )
     generate_auth_token_strategy = providers.Factory(
         services.JWTAuthTokenStrategy,
         token_service=jwt_codec,
-        expires_in=settings.JWT_EXPIRES_IN,
+        access_token_expires_in=settings.ACCESS_TOKEN_EXPIRES_IN,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRES_IN,
     )
     event_repo = providers.Factory(repos.EventRepo, db_session=db_session)
     event_query_repo = providers.Factory(repos.EventQueryRepo, db_session=db_session)

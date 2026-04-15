@@ -1,4 +1,7 @@
 from .auth import AuthUseCase as AuthUseCase
+from .auth import LoginUseCase as LoginUseCase
+from .auth import LogoutUseCase as LogoutUseCase
+from .auth import RefreshTokenUseCase as RefreshTokenUseCase
 from .auth import RegisterUseCase as RegisterUseCase
 from .events import ChangePrivacyUseCase as ChangePrivacyUseCase
 from .events import CreateEventUseCase as CreateEventUseCase

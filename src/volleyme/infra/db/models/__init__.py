@@ -7,3 +7,4 @@ from .game_team import GameTeam as GameTeam
 from .player import Player as Player
 from .profile import Profile as Profile
 from .user import User as User
+from .user_session import UserSession as UserSession

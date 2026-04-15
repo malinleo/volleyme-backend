@@ -182,7 +182,7 @@ class SQLAlchemyModelRepo(
         ],
         order_by: collections.abc.Sequence[
             sqlalchemy.ColumnExpressionArgument[typing.Any]
-        ],
+        ] = tuple(),
         limit: int | None = None,
         offset: int | None = None,
         load_configs: collections.abc.Set[

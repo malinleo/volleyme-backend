@@ -5,9 +5,10 @@ import fastapi.security
 from dependency_injector import wiring
 
 from src.config import settings
+from src.volleyme import di
 from src.volleyme.application import services as app_services
 from src.volleyme.application import usecases
-from src.volleyme.infra import di, services
+from src.volleyme.infra import services
 
 from . import auth, schemas
 
@@ -23,7 +24,7 @@ async def authenticate_user(
         fastapi.Depends(auth.auth),
     ],
 ) -> app_services.auth.AuthUser:
-    auth_usecase: usecases.AuthUseCase = container.usecases.authenticate(
+    auth_usecase: usecases.AuthUseCase = await container.usecases.authenticate(
         auth_strategy__credentials=services.JWTCredentials(
             token=credentials.credentials,
         ),

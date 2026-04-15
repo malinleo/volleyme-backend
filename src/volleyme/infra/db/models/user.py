@@ -11,6 +11,7 @@ if typing.TYPE_CHECKING:
     from .event import Event, EventHostRel, EventParticipantRel
     from .event_invitation import EventInvitation
     from .profile import Profile
+    from .user_session import UserSession
 
 
 class User(
@@ -81,4 +82,10 @@ class User(
             foreign_keys="EventInvitation.user_id",
             lazy="raise",
         )
+    )
+    sessions: sqlalchemy.orm.Mapped[list[UserSession]] = sqlalchemy.orm.relationship(
+        "UserSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="raise",
     )

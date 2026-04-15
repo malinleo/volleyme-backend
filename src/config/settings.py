@@ -21,7 +21,9 @@ class Settings(pydantic_settings.BaseSettings):
     JWT_PUBLIC_KEY_PATH: pathlib.Path = BASE_DIR / ".jwt" / "jwtRS256.key.pub"
     JWT_PRIVATE_KEY_PATH: pathlib.Path = BASE_DIR / ".jwt" / "jwtRS256.key"
     JWT_ALGORITHM: str = "RS256"
-    JWT_EXPIRES_IN: int = 24 * 60 * 60  # 1 day in seconds
+
+    ACCESS_TOKEN_EXPIRES_IN: int = 24 * 60 * 60  # 1 day in seconds
+    REFRESH_TOKEN_EXPIRES_IN: int = 7 * 24 * 60 * 60  # 7 days in seconds
 
     _jwt_public_key: str | None = None
     _jwt_private_key: str | None = None

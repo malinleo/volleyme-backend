@@ -33,7 +33,7 @@ class BaseError(Exception):
 
     @classmethod
     def from_errors(cls, errors: collections.abc.Iterable[BaseError]) -> BaseError:
-        details = []
+        details: list[ErrorDetail] = []
         for error in errors:
             details.extend(error.details)
         return cls(details=details)

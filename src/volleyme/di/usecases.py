@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 
+from src.config import settings
 from src.volleyme.application import usecases
 
 from . import infra
@@ -30,16 +31,29 @@ class Usecases(containers.DeclarativeContainer):
     authenticate = providers.Factory(
         usecases.AuthUseCase,
         auth_strategy=infra.auth_strategy,
+        user_session_repo=infra.user_session_repo,
     )
     login = providers.Factory(
-        usecases.AuthUseCase,
-        auth_strategy=infra.login_auth_strategy,
+        usecases.LoginUseCase,
+        login_strategy=infra.login_strategy,
     )
     register = providers.Factory(
         usecases.RegisterUseCase,
         user_repo=infra.user_repo,
         user_query_repo=infra.user_query_repo,
+        user_session_repo=infra.user_session_repo,
         password_validator=infra.password_validator,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRES_IN,
+    )
+    logout = providers.Factory(
+        usecases.LogoutUseCase,
+        user_session_repo=infra.user_session_repo,
+    )
+    refresh = providers.Factory(
+        usecases.RefreshTokenUseCase,
+        token_service=infra.jwt_codec,
+        user_session_repo=infra.user_session_repo,
+        refresh_token_expires_in=settings.REFRESH_TOKEN_EXPIRES_IN,
     )
     join_event = providers.Factory(
         usecases.JoinEventUseCase,

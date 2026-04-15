@@ -10,6 +10,7 @@ class AuthErrorCode(enum.StrEnum):
     DEFAULT = "__AUTH_ERROR__"
     INVALID_TOKEN = "__INVALID_TOKEN__"
     EXPIRED_TOKEN = "__EXPIRED_TOKEN__"
+    INVALID_TOKEN_TYPE = "__INVALID_TOKEN_TYPE__"
 
 
 class AuthError(exc.ApplicationServiceError):
