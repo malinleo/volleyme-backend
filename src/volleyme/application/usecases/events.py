@@ -75,8 +75,8 @@ class GetEventsUseCase(usecases.BaseUseCase):
             limit,
             offset,
             only_my_events,
-            end_before,
-            end_after,
+            end_before.astimezone(datetime.UTC) if end_before else None,
+            end_after.astimezone(datetime.UTC) if end_after else None,
         )
 
 
