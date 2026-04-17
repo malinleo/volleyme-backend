@@ -15,7 +15,7 @@ class EventDetailResponse(schemas.BaseSchema):
     end_dt: datetime.datetime
     city: str = pydantic.Field(max_length=255)
     address: str = pydantic.Field(max_length=1024)
-    participants_count: int
+    participants_count: int = pydantic.Field(gt=0)
     max_participants_count: int = pydantic.Field(gt=0)
     my_role: enums.EventParticipantRole
     price: decimal.Decimal = pydantic.Field(ge=0)
@@ -39,18 +39,19 @@ class EventParticipantResponse(schemas.BaseSchema):
 
 class EventListResponse(schemas.BaseSchema):
     id: uuid.UUID
-    title: str
+    title: str = pydantic.Field(max_length=255)
     start_dt: datetime.datetime
-    city: str
-    address: str
-    price: decimal.Decimal
-    participants_count: int
+    city: str = pydantic.Field(max_length=255)
+    address: str = pydantic.Field(max_length=1024)
+    price: decimal.Decimal = pydantic.Field(ge=0)
+    participants_count: int = pydantic.Field(gt=0)
+    max_participants_count: int = pydantic.Field(gt=0)
     my_role: enums.EventParticipantRole
     is_public: bool
 
     image_urls: list[str]
-    country: str
-    currency: str
+    country: str = pydantic.Field(max_length=2)
+    currency: str = pydantic.Field(max_length=3)
     game_type: enums.GameType
 
 

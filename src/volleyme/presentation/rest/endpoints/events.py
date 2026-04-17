@@ -1,3 +1,4 @@
+import datetime
 import typing
 import uuid
 
@@ -48,6 +49,8 @@ async def get_events(
         fastapi.Depends(deps.get_pagination_params),
     ],
     only_my_events: bool = fastapi.Query(default=False),
+    end_before: datetime.datetime = fastapi.Query(default=None),
+    end_after: datetime.datetime = fastapi.Query(default=None),
 ):
     return schemas.PaginatedResponse.build(
         request,
@@ -59,6 +62,8 @@ async def get_events(
                 pagination_params.limit,
                 pagination_params.offset,
                 only_my_events,
+                end_before,
+                end_after,
             )
         ],
     )

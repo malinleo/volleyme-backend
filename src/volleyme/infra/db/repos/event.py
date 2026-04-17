@@ -1,3 +1,5 @@
+import datetime
+
 import sqlalchemy.orm
 
 from src.volleyme.application import dto, query_repos
@@ -301,6 +303,8 @@ class EventQueryRepo(
         limit: int | None = None,
         offset: int | None = None,
         only_my_events: bool = False,
+        end_before: datetime.datetime | None = None,
+        end_after: datetime.datetime | None = None,
     ) -> list[dto.EventListDto]:
         query = (
             sqlalchemy.select(self._model_class)
@@ -340,13 +344,16 @@ class EventQueryRepo(
                 ),
             )
         )
-        where = [
-            self._model_class.hosts.any(models.User.id == user_id),
-            self._model_class.participants.any(models.User.id == user_id),
-        ]
+        where = self._model_class.hosts.any(
+            models.User.id == user_id
+        ) | self._model_class.participants.any(models.User.id == user_id)
         if not only_my_events:
-            where.append(self._model_class.is_public.is_(True))
-        query = query.where(sqlalchemy.or_(*where))
+            where |= self._model_class.is_public.is_(True)
+        if end_before:
+            where &= self._model_class.end_dt <= end_before
+        if end_after:
+            where &= self._model_class.end_dt > end_after
+        query = query.where(where)
         result = await self._try_execute(query=query)
         event_models_list = result.result.unique().scalars().all()
         return [
@@ -358,6 +365,7 @@ class EventQueryRepo(
                 address=event_model.address,
                 price=event_model.price,
                 participants_count=event_model.participants_count,
+                max_participants_count=event_model.max_participants_count,
                 my_role=event_model.my_role,
                 image_urls=event_model.image_urls,
                 country=event_model.country,

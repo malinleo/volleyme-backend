@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 from src.volleyme.application import dto
@@ -21,6 +22,8 @@ class EventQueryRepo(typing.Protocol):
         limit: int,
         offset: int,
         only_my_events: bool = ...,
+        end_before: datetime.datetime | None = None,
+        end_after: datetime.datetime | None = None,
     ) -> list[dto.EventListDto]:
         """Get events info."""
         ...

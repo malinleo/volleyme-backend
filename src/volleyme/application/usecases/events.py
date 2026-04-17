@@ -67,12 +67,16 @@ class GetEventsUseCase(usecases.BaseUseCase):
         limit: int,
         offset: int,
         only_my_events: bool = False,
+        end_before: datetime.datetime | None = None,
+        end_after: datetime.datetime | None = None,
     ) -> list[dto.EventListDto]:
         return await self.event_query_repo.get_events_info_for_user(
             types.UserId(user_id),
             limit,
             offset,
             only_my_events,
+            end_before,
+            end_after,
         )
 
 

@@ -39,6 +39,7 @@ class EventListDto(dto.BaseDto):
     address: str = pydantic.Field(max_length=1024)
     price: decimal.Decimal = pydantic.Field(ge=0)
     participants_count: int = pydantic.Field(gt=0)
+    max_participants_count: int = pydantic.Field(gt=0)
     my_role: enums.EventParticipantRole
     is_public: bool
 
