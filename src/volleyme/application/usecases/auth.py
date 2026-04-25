@@ -42,22 +42,14 @@ class AuthUseCase:
                 ],
             ) from repo_error
         if not session:
-            raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
-                        messages=["Session not found"],
-                    )
-                ],
+            raise usecases.exc.Unauthorized(
+                code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
+                message="Session not found",
             )
         if not session.is_valid():
-            raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
-                        messages=["Session is invalid"],
-                    )
-                ],
+            raise usecases.exc.Unauthorized(
+                code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
+                message="Session is invalid",
             )
         return auth_user
 
