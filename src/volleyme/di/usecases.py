@@ -76,3 +76,7 @@ class Usecases(containers.DeclarativeContainer):
         event_repo=infra.event_repo,
         event_query_repo=infra.event_query_repo,
     )
+    health_check = providers.Factory(
+        usecases.HealthCheckUseCase,
+        health_check_query_repo=infra.health_check_query_repo,
+    )

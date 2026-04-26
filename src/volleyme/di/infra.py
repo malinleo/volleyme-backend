@@ -83,3 +83,7 @@ class Infra(containers.DeclarativeContainer):
         repos.EventInvitationRepo,
         db_session=db_session,
     )
+    health_check_query_repo = providers.Factory(
+        repos.HealthCheckQueryRepo,
+        db_session=db_session,
+    )
