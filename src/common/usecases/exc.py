@@ -45,12 +45,16 @@ class NotFound(UseCaseError):
 class Unauthorized(UseCaseError):
     """Unauthorized."""
 
-    def __init__(self, message: str) -> None:
+    def __init__(
+        self,
+        message: str | None = None,
+        code: UseCaseErrorCode | None = None,
+    ) -> None:
         super().__init__(
             details=[
                 exc.ErrorDetail(
-                    code=UseCaseErrorCode.UNAUTHORIZED,
-                    messages=[message],
+                    code=code or UseCaseErrorCode.UNAUTHORIZED,
+                    messages=[message or "Unauthorized"],
                 )
             ],
         )

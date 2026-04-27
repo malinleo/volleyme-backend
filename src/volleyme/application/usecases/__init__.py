@@ -10,4 +10,5 @@ from .events import GetEventByIdUseCase as GetEventByIdUseCase
 from .events import GetEventsUseCase as GetEventsUseCase
 from .events import JoinEventUseCase as JoinEventUseCase
 from .events import LeaveEventUseCase as LeaveEventUseCase
+from .health import HealthCheckUseCase as HealthCheckUseCase
 from .invitation import InviteToEventUseCase as InviteToEventUseCase

@@ -12,6 +12,7 @@ container.wire(
         endpoints.events,
         endpoints.auth,
         endpoints.invitation,
+        endpoints.health,
     ],
     warn_unresolved=settings.DEBUG,
 )
@@ -30,6 +31,7 @@ app = fastapi.FastAPI(
 app.include_router(endpoints.events_router)
 app.include_router(endpoints.auth_router)
 app.include_router(endpoints.invitation_router)
+app.include_router(endpoints.health_router)
 
 app.exception_handler(usecases.exc.UseCaseError)(exc_handlers.handle_use_case_error)
 app.exception_handler(usecases.exc.NotFound)(exc_handlers.handle_not_found_error)
