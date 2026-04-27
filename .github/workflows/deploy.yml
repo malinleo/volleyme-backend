@@ -1,0 +1,59 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: 
+      - main
+      - feature/ci*
+env:
+  REGISTRY: cr.selcloud.ru
+  IMAGE_NAME: volleyme-prod/backend
+  DEPLOY_PATH: /opt/volleyme
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+            IMAGE_TAG="${{ github.sha }}"
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            BUILD_DIR=$(mktemp -d)
+
+            # Clone the repo at the exact commit
+            git clone --depth 1 --branch ${{ github.ref_name }} https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git "$BUILD_DIR"
+            cd "$BUILD_DIR"
+            
+            # The Selectel auth endpoint is rejecting GitHub runners — doesn't matter which Docker auth method we use,
+            # they all hit the same /auth endpoint under the hood.
+            # Build and push on local server.
+            docker build -t "${IMAGE}:${IMAGE_TAG:0:7}" -t "${IMAGE}:latest" -f .ci/Dockerfile .
+            docker push "${IMAGE}:${IMAGE_TAG:0:7}"
+            docker push "${IMAGE}:latest"
+
+            # Deploy
+            cd "$DEPLOY_DIR"
+            export IMAGE_TAG="${IMAGE_TAG:0:7}"
+            docker compose --profile migrate run --rm volleyme-migrate
+            docker compose up -d --remove-orphans
+
+            echo "Waiting for healthcheck..."
+            timeout 60 bash -c '
+              until [ "$(docker inspect --format="{{.State.Health.Status}}" volleyme-backend-volleyme-backend-1 2>/dev/null)" = "healthy" ]; do
+                sleep 2
+              done
+            ' || { echo "Deploy health check failed!"; docker compose logs volleyme-backend --tail 50; exit 1; }
+            echo "Deploy successful!"
+
+            # Cleanup
+            rm -rf "$BUILD_DIR"
+            docker image prune -f
+            # docker image prune -af --filter "until=24h"

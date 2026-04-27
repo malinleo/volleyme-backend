@@ -1,0 +1,21 @@
+============================================
+  VolleyMe Backend Server
+============================================
+
+Project directory:
+  cd /opt/volleyme
+
+View logs:
+  1. Check service name in docker-compose.yml
+  2. Use docker compose logs:
+
+  # Follow logs in real-time
+  docker compose logs -f volleyme-backend
+
+  # Logs from the last 30 minutes
+  docker compose logs --since 30m volleyme-backend
+
+  # Logs since a specific timestamp
+  docker compose logs --since 2026-04-27T14:00:00 volleyme-backend
+
+============================================
