@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir poetry && \
 # -----------------------------------------------------------
 FROM python:3.14-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssh-client openssl && \
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-client openssl curl && \
     rm -rf /var/lib/apt/lists/*
 
 ENV HOST=0.0.0.0
