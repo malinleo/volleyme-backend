@@ -7,9 +7,9 @@ from src.volleyme import di
 from src.volleyme.application import services as app_services
 from src.volleyme.application import usecases
 from src.volleyme.infra import services
-from src.volleyme.presentation.rest import deps, schemas
+from src.volleyme.presentation.rest.v0_1_0 import deps, schemas
 
-auth_router = fastapi.APIRouter(prefix="/auth", tags=["auth"])
+auth_router = fastapi.APIRouter(prefix="/auth")
 
 
 @auth_router.post("/login/", response_model=schemas.JWTAuthTokenResponse)
