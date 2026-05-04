@@ -3,15 +3,15 @@ import fastapi
 from src.common import usecases
 from src.config import settings
 from src.volleyme.di import DI
-from src.volleyme.presentation.rest import endpoints, exc_handlers
+from src.volleyme.presentation.rest import endpoints, exc_handlers, v0_1_0
 
 container = DI()
 container.wire(
     modules=[
         __name__,
-        endpoints.events,
-        endpoints.auth,
-        endpoints.invitation,
+        v0_1_0.endpoints.events,
+        v0_1_0.endpoints.auth,
+        v0_1_0.endpoints.invitation,
         endpoints.health,
     ],
     warn_unresolved=settings.DEBUG,
@@ -28,9 +28,7 @@ app = fastapi.FastAPI(
     },
 )
 
-app.include_router(endpoints.events_router)
-app.include_router(endpoints.auth_router)
-app.include_router(endpoints.invitation_router)
+app.include_router(v0_1_0.v0_1_0_router)
 app.include_router(endpoints.health_router)
 
 app.exception_handler(usecases.exc.UseCaseError)(exc_handlers.handle_use_case_error)

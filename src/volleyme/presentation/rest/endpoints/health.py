@@ -7,10 +7,7 @@ from src.volleyme import di
 from src.volleyme.application import usecases
 from src.volleyme.presentation.rest import schemas
 
-health_router = fastapi.APIRouter(
-    prefix="/healthz",
-    tags=["health"],
-)
+health_router = fastapi.APIRouter(prefix="/healthz", tags=["health"])
 
 
 @health_router.get("/", response_model=schemas.HealthCheckResponse)
