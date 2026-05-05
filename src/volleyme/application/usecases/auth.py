@@ -20,15 +20,12 @@ class AuthUseCase:
         try:
             auth_user = await self.auth_strategy.authenticate()
         except services.exc.ApplicationServiceError as service_error:
-            raise usecases.exc.UseCaseError.from_error(service_error) from service_error
+            raise usecases.exc.Unauthorized(
+                message="Failed to authenticate",
+            ) from service_error
         if not auth_user:
-            raise usecases.exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=usecases.exc.UseCaseErrorCode.NOT_FOUND,
-                        messages=["User with given credentials wasn't found"],
-                    )
-                ],
+            raise usecases.exc.Unauthorized(
+                message="User with given credentials wasn't found",
             )
         try:
             session = await self.user_session_repo.get_session(auth_user.session_id)
@@ -42,15 +39,9 @@ class AuthUseCase:
                 ],
             ) from repo_error
         if not session:
-            raise usecases.exc.Unauthorized(
-                code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
-                message="Session not found",
-            )
+            raise usecases.exc.Unauthorized(message="Session not found")
         if not session.is_valid():
-            raise usecases.exc.Unauthorized(
-                code=usecases.exc.UseCaseErrorCode.UNAUTHORIZED,
-                message="Session is invalid",
-            )
+            raise usecases.exc.Unauthorized(message="Session is invalid")
         return auth_user
 
 
