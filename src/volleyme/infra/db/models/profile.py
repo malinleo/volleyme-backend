@@ -22,6 +22,8 @@ class Profile(
     )
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
+        foreign_keys=[user_id],
+        lazy="raise",
     )
     first_name: sqlalchemy.orm.Mapped[str | None] = sqlalchemy.orm.mapped_column(
         sqlalchemy.String(100),

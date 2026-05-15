@@ -21,6 +21,8 @@ class GameTeam(
     game: sqlalchemy.orm.Mapped[Game] = sqlalchemy.orm.relationship(
         "Game",
         back_populates="teams",
+        foreign_keys=[game_id],
+        lazy="raise",
     )
     title: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.String(100),

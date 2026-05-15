@@ -25,6 +25,7 @@ class Game(
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
         "Event",
         back_populates="games",
+        lazy="raise",
     )
     type: sqlalchemy.orm.Mapped[enums.GameType] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Integer,
@@ -38,4 +39,5 @@ class Game(
     teams: sqlalchemy.orm.Mapped[list[GameTeam]] = sqlalchemy.orm.relationship(
         "GameTeam",
         back_populates="game",
+        lazy="raise",
     )

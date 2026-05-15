@@ -23,11 +23,12 @@ async def get_db_session(
     async with async_session_factory() as session:
         try:
             yield session
-        except Exception as ex:
-            await session.rollback()
-            raise ex
-        else:
             await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 @contextlib.asynccontextmanager
@@ -39,8 +40,9 @@ async def get_db_session_context(
     async with async_session_factory() as session:
         try:
             yield session
-        except Exception as ex:
-            await session.rollback()
-            raise ex
-        else:
             await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

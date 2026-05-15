@@ -14,8 +14,9 @@ class Infra(containers.DeclarativeContainer):
         sqlalchemy.ext.asyncio.create_async_engine,
         url=settings.db_url,
         echo=settings.DEBUG,
+        pool_pre_ping=True,
     )
-    async_session_factory = providers.Resource(
+    async_session_factory = providers.Singleton(
         sqlalchemy.ext.asyncio.async_sessionmaker,
         async_engine,
         expire_on_commit=False,

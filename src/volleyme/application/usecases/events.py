@@ -48,10 +48,13 @@ class GetEventByIdUseCase(usecases.BaseUseCase):
             except domain_exc.DomainError as error:
                 raise usecases.exc.UseCaseError.from_error(error) from error
             await self.event_invitation_repo.save_invitation(invitation, create=False)
-        event_info = await self.event_query_repo.get_event_info_for_user(
-            types.EventId(event_id),
-            types.UserId(user_id),
-        )
+        try:
+            event_info = await self.event_query_repo.get_event_info_for_user(
+                types.EventId(event_id),
+                types.UserId(user_id),
+            )
+        except repos.exc.RepoError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
         if not event_info:
             raise usecases.exc.NotFound(message=f"Event with id {event_id} not found")
         return event_info
@@ -208,8 +211,14 @@ class JoinEventUseCase(usecases.BaseUseCase):
 
             await self.event_invitation_repo.save_invitation(invitation, create=False)
 
-        event.add_participant(types.UserId(user_id))
-        await self.event_repo.save_event(event, create=False)
+        try:
+            event.add_participant(types.UserId(user_id))
+        except domain_exc.DomainError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
+        try:
+            await self.event_repo.save_event(event, create=False)
+        except repos.exc.RepoError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
 
 
 @dataclasses.dataclass(frozen=True)
@@ -227,8 +236,14 @@ class LeaveEventUseCase(usecases.BaseUseCase):
             )
         ]
         self._run_validation(validators)
-        event_aggregate.remove_participant(types.UserId(user_id))
-        await self.event_repo.save_event(event_aggregate, create=False)
+        try:
+            event_aggregate.remove_participant(types.UserId(user_id))
+        except domain_exc.DomainError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
+        try:
+            await self.event_repo.save_event(event_aggregate, create=False)
+        except repos.exc.RepoError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
 
 
 @dataclasses.dataclass(frozen=True)
@@ -257,14 +272,17 @@ class ChangePrivacyUseCase(usecases.BaseUseCase):
                 event_aggregate.make_private(types.UserId(user_id), current_dt)
             except domain_exc.DomainError as error:
                 raise usecases.exc.UseCaseError.from_error(error) from error
-        event_aggregate = await self.event_repo.save_event(
-            event_aggregate,
-            create=False,
-        )
-        event_info = await self.event_query_repo.get_event_info_for_user(
-            event_aggregate.id,
-            types.UserId(user_id),
-        )
+        try:
+            event_aggregate = await self.event_repo.save_event(
+                event_aggregate,
+                create=False,
+            )
+            event_info = await self.event_query_repo.get_event_info_for_user(
+                event_aggregate.id,
+                types.UserId(user_id),
+            )
+        except repos.exc.RepoError as error:
+            raise usecases.exc.UseCaseError.from_error(error) from error
         if not event_info:
             raise usecases.exc.NotFound(
                 message=f"Event with id {event_aggregate.id} not found",

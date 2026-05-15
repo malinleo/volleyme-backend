@@ -56,21 +56,25 @@ class Event(
         "User",
         secondary="event_participant_rel",
         back_populates="participated_events",
+        lazy="raise",
     )
     participants_rel: sqlalchemy.orm.Mapped[list[EventParticipantRel]] = (
         sqlalchemy.orm.relationship(
             "EventParticipantRel",
             back_populates="event",
+            lazy="raise",
         )
     )
     hosts: sqlalchemy.orm.Mapped[list[User]] = sqlalchemy.orm.relationship(
         "User",
         secondary="event_host_rel",
         back_populates="hosted_events",
+        lazy="raise",
     )
     hosts_rel: sqlalchemy.orm.Mapped[list[EventHostRel]] = sqlalchemy.orm.relationship(
         "EventHostRel",
         back_populates="event",
+        lazy="raise",
     )
     description: sqlalchemy.orm.Mapped[str] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Text,
@@ -89,6 +93,7 @@ class Event(
     games: sqlalchemy.orm.Mapped[list[Game]] = sqlalchemy.orm.relationship(
         "Game",
         back_populates="event",
+        lazy="raise",
     )
     created_by_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey("user.id", name="fk_event_created_by"),
@@ -100,11 +105,13 @@ class Event(
         "User",
         back_populates="created_events",
         foreign_keys=[created_by_id],
+        lazy="raise",
     )
     updated_by: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
         back_populates="updated_events",
         foreign_keys=[updated_by_id],
+        lazy="raise",
     )
     is_public: sqlalchemy.orm.Mapped[bool] = sqlalchemy.orm.mapped_column(
         sqlalchemy.Boolean,
@@ -146,6 +153,7 @@ class EventParticipantRel(base_models.BaseModel):
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
         "Event",
         back_populates="participants_rel",
+        lazy="raise",
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
@@ -158,6 +166,7 @@ class EventParticipantRel(base_models.BaseModel):
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
         back_populates="participated_events_rel",
+        lazy="raise",
     )
 
 
@@ -182,6 +191,7 @@ class EventHostRel(base_models.BaseModel):
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
         "Event",
         back_populates="hosts_rel",
+        lazy="raise",
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(
@@ -194,4 +204,5 @@ class EventHostRel(base_models.BaseModel):
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
         back_populates="hosted_events_rel",
+        lazy="raise",
     )

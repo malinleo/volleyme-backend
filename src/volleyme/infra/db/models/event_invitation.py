@@ -25,6 +25,7 @@ class EventInvitation(
     event: sqlalchemy.orm.Mapped[Event] = sqlalchemy.orm.relationship(
         "Event",
         back_populates="invitations",
+        lazy="raise",
     )
     user_id: sqlalchemy.orm.Mapped[uuid.UUID | None] = sqlalchemy.orm.mapped_column(
         sqlalchemy.ForeignKey(

@@ -27,6 +27,8 @@ class Player(
     )
     user: sqlalchemy.orm.Mapped[User] = sqlalchemy.orm.relationship(
         "User",
+        foreign_keys=[user_id],
+        lazy="raise",
     )
     rating: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(
         default=0,
