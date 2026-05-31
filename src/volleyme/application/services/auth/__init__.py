@@ -10,5 +10,6 @@ from .strategy import AuthStrategy as AuthStrategy
 from .strategy import AuthToken as AuthToken
 from .strategy import AuthTokenSchema as AuthTokenSchema
 from .strategy import GenerateAuthTokenStrategy as GenerateAuthTokenStrategy
+from .strategy import LoginResult as LoginResult
 from .strategy import LoginStrategy as LoginStrategy
 from .user import AuthUser as AuthUser

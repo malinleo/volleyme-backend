@@ -3,10 +3,26 @@ import typing
 
 import attrs
 
+from src.common import events
+
+
+@attrs.define(frozen=True, kw_only=True)
+class DomainEvent(events.Event[events.PayloadT]):
+    """Base class for domain events."""
+
 
 @attrs.define(kw_only=True)
 class BaseEntity:
     """Base class for domain entities."""
+
+    _events: list[DomainEvent] = attrs.field(factory=list, init=False)
+
+    def _add_event(self, event: DomainEvent) -> None:
+        self._events.append(event)
+
+    def pull_events(self) -> list[DomainEvent]:
+        events, self._events = self._events, []
+        return events
 
 
 @attrs.define(kw_only=True)

@@ -19,11 +19,13 @@ async def get_db_session(
     async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker[
         sqlalchemy.ext.asyncio.AsyncSession
     ],
+    internal_commit: bool = False,
 ) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session
-            await session.commit()
+            if internal_commit:
+                await session.commit()
         except Exception:
             await session.rollback()
             raise
@@ -36,11 +38,13 @@ async def get_db_session_context(
     async_session_factory: sqlalchemy.ext.asyncio.async_sessionmaker[
         sqlalchemy.ext.asyncio.AsyncSession
     ],
+    internal_commit: bool = False,
 ) -> collections.abc.AsyncGenerator[sqlalchemy.ext.asyncio.AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session
-            await session.commit()
+            if internal_commit:
+                await session.commit()
         except Exception:
             await session.rollback()
             raise
