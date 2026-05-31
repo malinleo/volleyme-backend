@@ -2,7 +2,10 @@ import dataclasses
 import enum
 import typing
 
-from . import user
+from src.common import result
+from src.volleyme.domain import types
+
+from . import exc, user
 
 
 class AuthTokenSchema(enum.StrEnum):
@@ -17,11 +20,16 @@ class AuthToken:
 
 
 class AuthStrategy(typing.Protocol):
-    async def authenticate(self) -> user.AuthUser | None: ...
+    async def authenticate(self) -> result.Result[user.AuthUser, exc.AuthError]: ...
+
+
+@dataclasses.dataclass(frozen=True)
+class LoginResult:
+    id: types.UserId
 
 
 class LoginStrategy(typing.Protocol):
-    async def login(self) -> user.AuthUser | None: ...
+    async def login(self) -> LoginResult | None: ...
 
 
 class GenerateAuthTokenStrategy(typing.Protocol):

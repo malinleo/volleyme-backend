@@ -5,3 +5,4 @@ from .auth import JWTCredentials as JWTCredentials
 from .auth import UsernamePasswordCredentials as UsernamePasswordCredentials
 from .auth import UsernamePasswordLoginStrategy as UsernamePasswordLoginStrategy
 from .token import JWTCodecService as JWTCodecService
+from .uow import SQLAlchemyUOW as SQLAlchemyUOW

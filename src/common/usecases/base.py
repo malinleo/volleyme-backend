@@ -20,15 +20,15 @@ class BaseUseCase:
         validators: collections.abc.Iterable[validators.Validator],
     ) -> None:
         errors = self._get_validation_errors(validators)
-        if errors:
-            raise exc.UseCaseError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=exc.UseCaseErrorCode.VALIDATION_FAILED,
-                        messages=[
-                            error.error_msg or "Validation failed" for error in errors
-                        ],
-                    )
-                ]
-            )
-        return None
+        if not errors:
+            return None
+        raise exc.UseCaseError(
+            details=[
+                common_exc.ErrorDetail(
+                    code=exc.UseCaseErrorCode.VALIDATION_FAILED,
+                    messages=[
+                        error.error_msg or "Validation failed" for error in errors
+                    ],
+                )
+            ]
+        )
