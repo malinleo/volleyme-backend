@@ -3,8 +3,9 @@ import datetime
 import uuid
 
 from src.common import exc as common_exc
+from src.common import result
 from src.volleyme.application import query_repos, services
-from src.volleyme.domain import aggregates, repos, types
+from src.volleyme.domain import types
 
 from . import token
 
@@ -25,10 +26,12 @@ class JWTAuthStrategy(services.auth.AuthStrategy):
     credentials: JWTCredentials
     token_service: token.JWTCodecService
 
-    async def authenticate(self) -> services.auth.AuthUser | None:
+    async def authenticate(
+        self,
+    ) -> result.Result[services.auth.AuthUser, services.auth.exc.AuthError]:
         payload = self.token_service.decode(self.credentials.token)
         if payload["typ"] != "access":
-            raise services.auth.exc.AuthError(
+            error = services.auth.exc.AuthError(
                 details=[
                     common_exc.ErrorDetail(
                         code=services.auth.exc.AuthErrorCode.INVALID_TOKEN_TYPE,
@@ -36,9 +39,12 @@ class JWTAuthStrategy(services.auth.AuthStrategy):
                     )
                 ],
             )
-        return services.auth.AuthUser(
-            id=types.UserId(uuid.UUID(payload["sub"])),
-            session_id=types.UserSessionId(uuid.UUID(payload["sid"])),
+            return result.Err(errors=[error])
+        return result.Ok(
+            services.auth.AuthUser(
+                id=types.UserId(uuid.UUID(payload["sub"])),
+                session_id=types.UserSessionId(uuid.UUID(payload["sid"])),
+            ),
         )
 
 
@@ -46,10 +52,8 @@ class JWTAuthStrategy(services.auth.AuthStrategy):
 class UsernamePasswordLoginStrategy(services.auth.LoginStrategy):
     credentials: UsernamePasswordCredentials
     user_query_repo: query_repos.UserQueryRepo
-    user_session_repo: repos.UserSessionRepo
-    refresh_token_expires_in: int
 
-    async def login(self) -> services.auth.AuthUser | None:
+    async def login(self) -> services.auth.LoginResult | None:
         user_auth_info = await self.user_query_repo.get_user_auth_info(
             self.credentials.username,
         )
@@ -58,23 +62,7 @@ class UsernamePasswordLoginStrategy(services.auth.LoginStrategy):
             user_auth_info.password,
         ):
             return None
-        session = aggregates.UserSession.create(
-            user_id=user_auth_info.id,
-            expires_at=datetime.datetime.now(datetime.UTC)
-            + datetime.timedelta(seconds=self.refresh_token_expires_in),
-        )
-        try:
-            session = await self.user_session_repo.save_session(session, create=True)
-        except repos.exc.RepoError as repo_error:
-            raise services.exc.ApplicationServiceError(
-                details=[
-                    common_exc.ErrorDetail(
-                        code=services.exc.ApplicationServiceErrorCode.DEFAULT,
-                        messages=["Failed to login user"],
-                    )
-                ],
-            ) from repo_error
-        return services.auth.AuthUser(id=user_auth_info.id, session_id=session.id)
+        return services.auth.LoginResult(id=user_auth_info.id)
 
 
 @dataclasses.dataclass

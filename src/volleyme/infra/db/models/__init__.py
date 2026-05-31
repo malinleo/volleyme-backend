@@ -4,6 +4,7 @@ from .event import EventParticipantRel as EventParticipantRel
 from .event_invitation import EventInvitation as EventInvitation
 from .game import Game as Game
 from .game_team import GameTeam as GameTeam
+from .outbox import Outbox as Outbox
 from .player import Player as Player
 from .profile import Profile as Profile
 from .user import User as User
