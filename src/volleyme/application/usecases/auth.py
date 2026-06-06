@@ -17,7 +17,12 @@ class AuthUseCase:
 
     @exc.wrap_errors
     async def execute(self) -> services.auth.AuthUser:
-        auth_result = await self.auth_strategy.authenticate()
+        try:
+            auth_result = await self.auth_strategy.authenticate()
+        except services.auth.exc.AuthError as auth_error:
+            raise usecases.exc.Unauthorized(
+                message="Failed to authenticate",
+            ) from auth_error
         match auth_result:
             case result.Err():
                 raise usecases.exc.Unauthorized(
