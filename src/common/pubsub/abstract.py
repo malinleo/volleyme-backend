@@ -16,10 +16,15 @@ class Message(typing.Protocol):
     def get_routing_key(self) -> str: ...
 
 
-@dataclasses.dataclass(kw_only=True)
-class ReceivedMessage:
+class ReceivedMessage(typing.Protocol):
     body: bytes
     headers: dict[str, typing.Any]
+
+    async def ack(self) -> None: ...
+    async def reject(self, requeue: bool = False) -> None: ...
+
+
+ReceivedMessageT = typing.TypeVar("ReceivedMessageT", bound=ReceivedMessage)
 
 
 class Publisher(typing.Protocol):
@@ -29,15 +34,15 @@ class Publisher(typing.Protocol):
     ) -> None: ...
 
 
-class Subscriber(typing.Protocol):
+class Subscriber(typing.Protocol[ReceivedMessageT]):
     async def iter_messages(
         self,
-    ) -> collections.abc.AsyncIterator[ReceivedMessage]: ...
+    ) -> collections.abc.AsyncIterator[ReceivedMessageT]: ...
 
     async def get_messages(
         self,
         count: int | None = None,
-    ) -> list[ReceivedMessage]: ...
+    ) -> list[ReceivedMessageT]: ...
 
 
 class AdminClient(typing.Protocol):
@@ -45,17 +50,3 @@ class AdminClient(typing.Protocol):
         self,
         destination: Destination,
     ) -> None: ...
-
-
-class Client(typing.Protocol):
-    def build_publisher(
-        self,
-        destination: Destination,
-    ) -> Publisher: ...
-
-    def build_subscriber(
-        self,
-        destination: Destination,
-    ) -> Subscriber: ...
-
-    def build_admin(self) -> AdminClient: ...

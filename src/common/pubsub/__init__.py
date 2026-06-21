@@ -1,5 +1,4 @@
 from .abstract import AdminClient as AdminClient
-from .abstract import Client as Client
 from .abstract import Destination as Destination
 from .abstract import Message as Message
 from .abstract import Publisher as Publisher

@@ -104,6 +104,24 @@ class Infra(containers.DeclarativeContainer):
         connection=rabbitmq_connection,
         exchange_name=settings.OUTBOX_ROUTING_KEY,
     )
+    event_subscriber = providers.Factory(
+        services.pubsub.RabbitMQSubscriber,
+        connection=rabbitmq_connection,
+        queue_name=settings.EVENTS_QUEUE_NAME,
+        poll_interval_seconds=settings.EVENTS_POLL_INTERVAL_SECONDS,
+        timeout_seconds=settings.EVENTS_TIMEOUT_SECONDS,
+    )
+    queue_binder = providers.Factory(
+        services.pubsub.QueueBinder,
+        connection=rabbitmq_connection,
+        queue_name=settings.EVENTS_QUEUE_NAME,
+        exchanges=[
+            services.pubsub.ExchangeBindData(
+                name=settings.OUTBOX_ROUTING_KEY,
+                routing_key=settings.OUTBOX_ROUTING_KEY,
+            ),
+        ],
+    )
 
 
 class UOW(containers.DeclarativeContainer):

@@ -7,21 +7,10 @@ from src.common import pubsub
 from src.config import settings
 from src.volleyme import di
 from src.volleyme.application import services
-from src.volleyme.domain import events as domain_events
 
 from .outbox_worker import OutboxWorker, OutboxWorkerDeps
 
 _logger = logging.getLogger(__name__)
-
-
-@wiring.inject
-def register_handlers(
-    container: di.DI = wiring.Closing[wiring.Provide[di.DI.container]],
-):
-    services.events.handlers_registry.register(
-        domain_events.types.EventType.EVENT_CREATED,
-        (domain_events.EventCreated, container.services.event_created_handler),
-    )
 
 
 @wiring.inject

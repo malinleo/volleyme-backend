@@ -6,6 +6,7 @@ import dataclasses
 import datetime
 import itertools
 import logging
+import typing
 
 import aio_pika
 import pamqp.commands
@@ -14,6 +15,19 @@ import tenacity
 from src.common import pubsub
 
 _logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(kw_only=True)
+class ReceivedMessage(pubsub.ReceivedMessage):
+    _message: aio_pika.abc.AbstractIncomingMessage
+    headers: dict[str, typing.Any]
+    body: bytes
+
+    async def ack(self) -> None:
+        await self._message.ack()
+
+    async def reject(self, requeue: bool = False) -> None:
+        await self._message.reject(requeue=requeue)
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -67,7 +81,8 @@ class RabbitMQPublisher(pubsub.Publisher):
         return
 
 
-class RabbitMQSubscriber(pubsub.Subscriber):
+@dataclasses.dataclass(kw_only=True)
+class RabbitMQSubscriber(pubsub.Subscriber[ReceivedMessage]):
     connection: aio_pika.Connection
     queue_name: str
     poll_interval_seconds: float = 1.0
@@ -76,8 +91,8 @@ class RabbitMQSubscriber(pubsub.Subscriber):
     async def get_messages(
         self,
         count: int | None = None,
-    ) -> list[pubsub.ReceivedMessage]:
-        messages: list[pubsub.ReceivedMessage] = []
+    ) -> list[ReceivedMessage]:
+        messages: list[ReceivedMessage] = []
         async with self.connection.channel() as channel:
             queue = await channel.declare_queue(self.queue_name, durable=True)
             _iter = range(count) if count else itertools.count()
@@ -89,7 +104,7 @@ class RabbitMQSubscriber(pubsub.Subscriber):
                 messages.append(message)
         return messages
 
-    async def get_message(self) -> pubsub.ReceivedMessage | None:
+    async def get_message(self) -> ReceivedMessage | None:
         async with self.connection.channel() as channel:
             queue = await channel.declare_queue(self.queue_name, durable=True)
             return await self._get_message(queue)
@@ -102,23 +117,33 @@ class RabbitMQSubscriber(pubsub.Subscriber):
     async def _get_message(
         self,
         queue: aio_pika.abc.AbstractQueue,
-    ) -> pubsub.ReceivedMessage | None:
+    ) -> ReceivedMessage | None:
         rabbit_message = await queue.get(
             fail=False,
-            no_ack=True,
             timeout=self.timeout_seconds,
         )
         if not rabbit_message:
             return None
-        await rabbit_message.ack()
-        return pubsub.ReceivedMessage(
-            body=rabbit_message.body,
-            headers=rabbit_message.headers,
+        return self._receive_message(rabbit_message)
+
+    @tenacity.retry(
+        wait=tenacity.wait_exponential(multiplier=1, min=2, max=8),
+        retry=tenacity.retry_if_exception_type(aio_pika.exceptions.AMQPError),
+        reraise=True,
+    )
+    def _receive_message(
+        self,
+        message: aio_pika.abc.AbstractIncomingMessage,
+    ) -> ReceivedMessage:
+        return ReceivedMessage(
+            _message=message,
+            body=message.body,
+            headers=message.headers,
         )
 
     async def iter_messages(
         self,
-    ) -> collections.abc.AsyncIterator[pubsub.ReceivedMessage]:
+    ) -> collections.abc.AsyncIterator[ReceivedMessage]:
         return self._iter_messages()
 
     @tenacity.retry(
@@ -128,16 +153,29 @@ class RabbitMQSubscriber(pubsub.Subscriber):
     )
     async def _iter_messages(
         self,
-    ) -> collections.abc.AsyncIterator[pubsub.ReceivedMessage]:
+    ) -> collections.abc.AsyncIterator[ReceivedMessage]:
+        async with self.connection.channel() as channel:
+            await channel.set_qos(prefetch_count=10)
+            queue = await channel.declare_queue(self.queue_name, durable=True)
+            async with queue.iterator() as queue_iter:
+                async for rabbit_message in queue_iter:
+                    yield self._receive_message(rabbit_message)
+
+
+@dataclasses.dataclass(kw_only=True)
+class ExchangeBindData:
+    name: str
+    routing_key: str
+
+
+@dataclasses.dataclass(kw_only=True)
+class QueueBinder:
+    connection: aio_pika.Connection
+    queue_name: str
+    exchanges: list[ExchangeBindData]
+
+    async def bind(self) -> None:
         async with self.connection.channel() as channel:
             queue = await channel.declare_queue(self.queue_name, durable=True)
-            for _ in itertools.count():
-                rabbit_message = await self._get_message(queue)
-                if not rabbit_message:
-                    await channel.flow()
-                    await asyncio.sleep(self.poll_interval_seconds)
-                    continue
-                yield pubsub.ReceivedMessage(
-                    body=rabbit_message.body,
-                    headers=rabbit_message.headers,
-                )
+            for exchange in self.exchanges:
+                await queue.bind(exchange.name, routing_key=exchange.routing_key)

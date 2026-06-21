@@ -47,10 +47,13 @@ class Settings(pydantic_settings.BaseSettings):
     EVENT_INVITATION_EXPIRATION_SECONDS: int = 1 * 24 * 60 * 60  # 1 day in seconds
 
     # Events settings
-    OUTBOX_BIG_POLL_INTERVAL_SECONDS: float = 3
+    OUTBOX_BIG_POLL_INTERVAL_SECONDS: float = 3.0
     OUTBOX_SMALL_POLL_INTERVAL_SECONDS: float = 0.5
     OUTBOX_POLL_BATCH_SIZE: int = 100
     OUTBOX_ROUTING_KEY: str = "outbox"
+    EVENTS_POLL_INTERVAL_SECONDS: float = 1.0
+    EVENTS_TIMEOUT_SECONDS: float = 10.0
+    EVENTS_QUEUE_NAME: str = "events"
 
     model_config = pydantic_settings.SettingsConfigDict(
         extra="ignore",
