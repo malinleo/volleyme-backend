@@ -37,7 +37,7 @@ services:
     volumes:
       - ./.jwt:/src/.jwt
     entrypoint: ["bash", "bash/create_jwt_key_pair.sh"]
-  
+
   postgres:
     image: postgres:18-alpine
     ports:
@@ -59,6 +59,39 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
 
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    configs:
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - volleyme-backend-rabbitmq-data:/var/lib/rabbitmq/
+      - volleyme-backend-rabbitmq-log:/var/log/rabbitmq/
+
+
+configs:
+  rabbitmq-plugins:
+    content: "[rabbitmq_management]."
+
 volumes:
   volleyme-backend-postgres-data:
     name: volleyme-backend-postgres-data
+  volleyme-backend-rabbitmq-data:
+    name: volleyme-backend-rabbitmq-data
+    driver: local
+  volleyme-backend-rabbitmq-log:
+    name: volleyme-backend-rabbitmq-log
+    driver: local

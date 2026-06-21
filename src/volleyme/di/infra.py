@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import string
 
+import aio_pika
 import sqlalchemy.ext.asyncio
 from dependency_injector import containers, providers
 
@@ -25,6 +28,11 @@ class Infra(containers.DeclarativeContainer):
     db_session = providers.Resource(
         common_models.get_db_session,
         async_session_factory=async_session_factory,
+    )
+    # RabbitMQ
+    rabbitmq_connection = providers.Resource(
+        aio_pika.connect_robust,
+        url=settings.rabbitmq_url,
     )
     jwt_codec = providers.Factory(
         services.JWTCodecService,
@@ -90,6 +98,29 @@ class Infra(containers.DeclarativeContainer):
     outbox_repo = providers.Factory(
         repos.OutboxRepo,
         db_session=db_session,
+    )
+    outbox_publisher = providers.Factory(
+        services.pubsub.RabbitMQPublisher,
+        connection=rabbitmq_connection,
+        exchange_name=settings.OUTBOX_ROUTING_KEY,
+    )
+    event_subscriber = providers.Factory(
+        services.pubsub.RabbitMQSubscriber,
+        connection=rabbitmq_connection,
+        queue_name=settings.EVENTS_QUEUE_NAME,
+        poll_interval_seconds=settings.EVENTS_POLL_INTERVAL_SECONDS,
+        timeout_seconds=settings.EVENTS_TIMEOUT_SECONDS,
+    )
+    queue_binder = providers.Factory(
+        services.pubsub.QueueBinder,
+        connection=rabbitmq_connection,
+        queue_name=settings.EVENTS_QUEUE_NAME,
+        exchanges=[
+            services.pubsub.ExchangeBindData(
+                name=settings.OUTBOX_ROUTING_KEY,
+                routing_key=settings.OUTBOX_ROUTING_KEY,
+            ),
+        ],
     )
 
 
@@ -209,6 +240,28 @@ class UOW(containers.DeclarativeContainer):
     refresh_token_uow = providers.Factory(
         services.uow.SQLAlchemyUOW,
         d=refresh_token_deps,
+        db_session=infra.db_session,
+        outbox_repo=infra.outbox_repo,
+    )
+    # Event handlers
+    event_created_handler_deps = providers.Factory(
+        services.events.EventCreatedHandlerDeps,
+        event_repo=infra.event_repo,
+    )
+    event_created_handler_uow = providers.Factory(
+        services.uow.SQLAlchemyUOW,
+        d=event_created_handler_deps,
+        db_session=infra.db_session,
+        outbox_repo=infra.outbox_repo,
+    )
+    # Outbox worker
+    outbox_worker_deps = providers.Factory(
+        services.events.OutboxWorkerDeps,
+        outbox_repo=infra.outbox_repo,
+    )
+    outbox_worker_uow = providers.Factory(
+        services.uow.SQLAlchemyUOW,
+        d=outbox_worker_deps,
         db_session=infra.db_session,
         outbox_repo=infra.outbox_repo,
     )

@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
     {name = "LeonidMalin",email = "leonid.malin@sensemitter.com"}
 ]
-requires-python = ">=3.14"
+requires-python = "==3.14.*"
 dynamic = ["dependencies"]
 
 
@@ -28,6 +28,9 @@ dependency-injector = "^4.48.2"
 pycountry = "^24.6.1"
 pwdlib = {version = "^0.3.0", extras = ["argon2"]}
 pyjwt = {version = "^2.10.1", extras = ["crypto"]}
+orjson = "^3.11.9"
+aio-pika = "^9.6.2"
+tenacity = "^9.1.4"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -6,6 +6,7 @@ import logging
 import typing
 
 from src.common import events as common_events
+from src.common import schemas
 
 _logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ DepsT = typing.TypeVar("DepsT")
 @dataclasses.dataclass(kw_only=True)
 class UOW(typing.Generic[DepsT], abc.ABC):
     d: DepsT
-    events: list[common_events.Event[typing.Any]] = dataclasses.field(
+    events: list[common_events.Event[schemas.BaseSchema]] = dataclasses.field(
         default_factory=list,
         init=False,
     )
@@ -26,5 +27,5 @@ class UOW(typing.Generic[DepsT], abc.ABC):
     @abc.abstractmethod
     async def rollback(self) -> None: ...
 
-    def add_events(self, *events: common_events.Event[typing.Any]) -> None:
+    def add_events(self, *events: common_events.Event[schemas.BaseSchema]) -> None:
         self.events.extend(events)

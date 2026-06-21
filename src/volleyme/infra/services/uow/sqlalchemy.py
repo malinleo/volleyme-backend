@@ -41,7 +41,8 @@ class SQLAlchemyUOW(
         outbox_events = [
             models.Outbox(
                 event_type=event.metadata.type,
-                payload=event.payload,
+                event_metadata=event.metadata.model_dump(mode="json"),
+                payload=event.payload.model_dump(mode="json"),
                 created_at=events_created_at,
                 sent_at=None,
             )

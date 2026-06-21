@@ -119,6 +119,7 @@ class CreateEventUseCase(usecases.BaseUseCase):
             creator_user_id=creator_user_id,
             is_public=event.is_public,
         )
+        self.uow.add_events(*new_event.pull_events())
         event_aggregate = await self.uow.d.event_repo.save_event(
             new_event,
             create=True,

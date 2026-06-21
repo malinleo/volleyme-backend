@@ -8,14 +8,12 @@ import uuid
 import attrs
 
 from src.common import entities as common_entities
-from src.volleyme.domain import enums, exc, types
+from src.common import events as common_events
+from src.volleyme.domain import enums, events, exc, types
 
 
 @attrs.define(kw_only=True)
-class Event(
-    common_entities.TimeStampedEntity,
-    common_entities.AggregateRoot,
-):
+class Event(common_entities.AggregateRoot):
     """Event aggregate root."""
 
     id: types.EventId = attrs.field(factory=lambda: types.EventId(uuid.uuid4()))
@@ -71,7 +69,7 @@ class Event(
         creator_user_id: types.UserId,
         is_public: bool,
     ) -> typing.Self:
-        return cls(
+        event = cls(
             title=title,
             start_dt=start_dt.astimezone(datetime.UTC),
             end_dt=end_dt.astimezone(datetime.UTC),
@@ -92,6 +90,35 @@ class Event(
             updated_by=creator_user_id,
             is_public=is_public,
         )
+        event.add_event(
+            events.EventCreated(
+                metadata=common_events.EventMetadata(
+                    type=events.types.EventType.EVENT_CREATED,
+                ),
+                payload=events.EventCreatedPayload(
+                    id=event.id,
+                    title=title,
+                    start_dt=start_dt.astimezone(datetime.UTC),
+                    end_dt=end_dt.astimezone(datetime.UTC),
+                    game_type=game_type,
+                    format_type=format_type,
+                    max_participants_count=max_participants_count,
+                    country=country,
+                    city=city,
+                    address=address,
+                    description=description,
+                    price=price,
+                    currency=currency,
+                    image_urls=image_urls,
+                    participants={creator_user_id},
+                    hosts={creator_user_id},
+                    created_by=creator_user_id,
+                    updated_by=creator_user_id,
+                    is_public=is_public,
+                ),
+            )
+        )
+        return event
 
     def _validate_start_before_end(self) -> None:
         if self.start_dt > self.end_dt:

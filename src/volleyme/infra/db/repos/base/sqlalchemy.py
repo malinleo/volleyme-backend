@@ -6,7 +6,7 @@ import uuid
 import sqlalchemy.exc
 import sqlalchemy.ext.asyncio
 import sqlalchemy.orm.strategy_options
-import sqlalchemy.sql.selectable
+import sqlalchemy.sql.dml
 
 from src.common import exc as common_exc
 from src.common import models
@@ -90,9 +90,24 @@ class SQLAlchemyModelRepo(
         query: sqlalchemy.Delete,
     ) -> QueryResult[typing.Any]: ...
 
+    @typing.overload
     async def _try_execute(
         self,
-        query: sqlalchemy.Select[tuple[ResultT]] | sqlalchemy.Delete,
+        query: sqlalchemy.sql.dml.ReturningUpdate[tuple[ResultT]],
+    ) -> QueryResult[ResultT]: ...
+
+    @typing.overload
+    async def _try_execute(
+        self,
+        query: sqlalchemy.Update,
+    ) -> QueryResult[typing.Any]: ...
+
+    async def _try_execute(
+        self,
+        query: sqlalchemy.Select[tuple[ResultT]]
+        | sqlalchemy.Delete
+        | sqlalchemy.Update
+        | sqlalchemy.sql.dml.ReturningUpdate[tuple[ResultT]],
     ) -> QueryResult[ResultT]:
         query_str = str(
             query.compile(
