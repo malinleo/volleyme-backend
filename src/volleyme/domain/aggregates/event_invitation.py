@@ -12,10 +12,7 @@ from src.volleyme.domain import exc, types
 
 
 @attrs.define(kw_only=True)
-class EventInvitation(
-    common_entities.TimeStampedEntity,
-    common_entities.AggregateRoot,
-):
+class EventInvitation(common_entities.AggregateRoot):
     id: types.EventInvitationId = attrs.field(
         factory=lambda: types.EventInvitationId(uuid.uuid4()),
     )

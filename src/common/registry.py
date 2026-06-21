@@ -16,14 +16,16 @@ ValueT_contra = typing.TypeVar(
 )
 
 
-class RegistryProtocol(typing.Protocol[KeyT_contra, ValueT_contra]):
+class RegistryProtocol(typing.Protocol[KeyT_contra, ValueT]):
     """Protocol for registry class."""
 
-    def register(self, for_key: KeyT_contra, item: ValueT_contra): ...
+    def register(self, for_key: KeyT_contra, item: ValueT): ...
 
     def register_deco(self, for_key: KeyT_contra): ...
 
     def remove(self, for_key: KeyT_contra): ...
+
+    def get(self, key: KeyT_contra) -> ValueT | None: ...
 
 
 class AbstractRegistry(
@@ -115,33 +117,5 @@ class Registry(AbstractRegistry[KeyT, ValueT]):
         """Check if key is already registered."""
         return for_key in self._registry
 
-
-class MultiValueRegistry(AbstractRegistry[KeyT, ValueT]):
-    """MultiValue registry implementation."""
-
-    def __init__(self, raise_on_registered: bool = True) -> None:
-        super().__init__(raise_on_registered)
-        self._registry: dict[KeyT, list[ValueT]] = {}
-
-    def _register_item(
-        self,
-        for_key: KeyT,
-        item: ValueT,
-    ) -> None:
-        """Register item in registry."""
-        self._registry.setdefault(for_key, [])
-        self._registry[for_key].append(item)
-
-    def _remove_key(
-        self,
-        for_key: KeyT,
-    ) -> None:
-        """Remove registered key from registry."""
-        del self._registry[for_key]
-
-    def _check_registered(
-        self,
-        for_key: KeyT,
-    ) -> bool:
-        """Check if key is already registered."""
-        return for_key in self._registry
+    def get(self, key: KeyT) -> ValueT | None:
+        return self._registry.get(key)

@@ -1,16 +1,25 @@
+from __future__ import annotations
+
+import abc
 import typing
 
-import attrs
+from . import schemas
 
-PayloadT = typing.TypeVar("PayloadT", bound=attrs.AttrsInstance)
+PayloadT = typing.TypeVar("PayloadT", bound=schemas.BaseSchema)
 
 
-@attrs.define(frozen=True, kw_only=True)
-class EventMetadata:
+class EventMetadata(schemas.BaseSchema):
     type: str
 
 
-@attrs.define(frozen=True, kw_only=True)
-class Event(typing.Generic[PayloadT]):
+class Event(schemas.BaseSchema, typing.Generic[PayloadT], abc.ABC):
     metadata: EventMetadata
     payload: PayloadT
+
+    @classmethod
+    @abc.abstractmethod
+    def build(
+        cls,
+        metadata: EventMetadata,
+        payload: dict[str, typing.Any],
+    ) -> Event[PayloadT]: ...

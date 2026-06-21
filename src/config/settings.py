@@ -10,6 +10,7 @@ class Settings(pydantic_settings.BaseSettings):
     PORT: int = 8000
     DEBUG: bool = False
     BASE_DIR: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
+
     # DB settings
     DB_NAME: str
     DB_USER: str
@@ -17,6 +18,12 @@ class Settings(pydantic_settings.BaseSettings):
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_DRIVER: str = "postgresql+asyncpg"
+
+    # RabbitMQ settings
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str
+    RABBITMQ_PASSWORD: str
 
     JWT_PUBLIC_KEY_PATH: pathlib.Path = BASE_DIR / ".jwt" / "jwtRS256.key.pub"
     JWT_PRIVATE_KEY_PATH: pathlib.Path = BASE_DIR / ".jwt" / "jwtRS256.key"
@@ -38,6 +45,12 @@ class Settings(pydantic_settings.BaseSettings):
 
     # Event invitation settings
     EVENT_INVITATION_EXPIRATION_SECONDS: int = 1 * 24 * 60 * 60  # 1 day in seconds
+
+    # Events settings
+    OUTBOX_BIG_POLL_INTERVAL_SECONDS: float = 3
+    OUTBOX_SMALL_POLL_INTERVAL_SECONDS: float = 0.5
+    OUTBOX_POLL_BATCH_SIZE: int = 100
+    OUTBOX_ROUTING_KEY: str = "outbox"
 
     model_config = pydantic_settings.SettingsConfigDict(
         extra="ignore",
@@ -62,6 +75,10 @@ class Settings(pydantic_settings.BaseSettings):
             with open(self.JWT_PRIVATE_KEY_PATH, "r") as jwt_private_key_file:
                 self._jwt_private_key = jwt_private_key_file.read()
         return self._jwt_private_key
+
+    @property
+    def rabbitmq_url(self) -> str:
+        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}"
 
 
 settings = Settings()  # type: ignore

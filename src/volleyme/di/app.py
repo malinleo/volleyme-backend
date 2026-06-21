@@ -1,9 +1,18 @@
 from dependency_injector import containers, providers
 
 from src.config import settings
-from src.volleyme.application import usecases
+from src.volleyme.application import services, usecases
 
 from . import infra as infra_module
+
+
+class Services(containers.DeclarativeContainer):
+    infra = providers.Container(infra_module.Infra)
+    uow = providers.Container(infra_module.UOW, infra=infra)
+    event_created_handler = providers.Factory(
+        services.events.EventCreatedHandlerProtocol,
+        uow=uow.event_created_handler_uow,
+    )
 
 
 class Usecases(containers.DeclarativeContainer):

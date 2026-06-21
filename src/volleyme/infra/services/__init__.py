@@ -1,4 +1,6 @@
+from . import events as events
 from . import password as password
+from . import pubsub as pubsub
 from .auth import JWTAuthStrategy as JWTAuthStrategy
 from .auth import JWTAuthTokenStrategy as JWTAuthTokenStrategy
 from .auth import JWTCredentials as JWTCredentials
