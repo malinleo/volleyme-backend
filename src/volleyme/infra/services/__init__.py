@@ -1,4 +1,5 @@
 from . import events as events
+from . import health as health
 from . import password as password
 from . import pubsub as pubsub
 from .auth import JWTAuthStrategy as JWTAuthStrategy

@@ -12,3 +12,4 @@ class ServiceCheckResultDto(dto.BaseDto):
 class HealthCheckDto(dto.BaseDto):
     is_healthy: bool
     db: ServiceCheckResultDto
+    rabbit: ServiceCheckResultDto

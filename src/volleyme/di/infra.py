@@ -122,6 +122,11 @@ class Infra(containers.DeclarativeContainer):
             ),
         ],
     )
+    health_service = providers.Factory(
+        services.health.HealthService,
+        amqp_url=settings.rabbitmq_url,
+        health_check_query_repo=health_check_query_repo,
+    )
 
 
 class UOW(containers.DeclarativeContainer):

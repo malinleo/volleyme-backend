@@ -9,3 +9,4 @@ class ServiceCheckResult(schemas.BaseSchema):
 class HealthCheckResponse(schemas.BaseSchema):
     is_healthy: bool
     db: ServiceCheckResult
+    rabbit: ServiceCheckResult

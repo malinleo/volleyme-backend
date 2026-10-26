@@ -91,5 +91,5 @@ class Usecases(containers.DeclarativeContainer):
     # Health Check
     health_check = providers.Factory(
         usecases.HealthCheckUseCase,
-        health_check_query_repo=infra.health_check_query_repo,
+        health_service=infra.health_service,
     )
