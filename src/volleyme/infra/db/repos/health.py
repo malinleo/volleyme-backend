@@ -1,14 +1,11 @@
 import sqlalchemy
 
-from src.volleyme.application import dto, query_repos
+from src.volleyme.application import dto
 
 from . import base
 
 
-class HealthCheckQueryRepo(
-    base.SQLAlchemyModelRepo,
-    query_repos.HealthCheckQueryRepo,
-):
+class HealthCheckQueryRepo(base.SQLAlchemyModelRepo):
     """Health check query repository implementation."""
 
     async def perform_health_check(self) -> dto.ServiceCheckResultDto:

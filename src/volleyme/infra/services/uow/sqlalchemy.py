@@ -34,6 +34,7 @@ class SQLAlchemyUOW(
             raise
 
     async def rollback(self) -> None:
+        self.events.clear()
         await self.db_session.rollback()
 
     async def _save_events(self) -> None:

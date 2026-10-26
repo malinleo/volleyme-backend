@@ -3,6 +3,8 @@ name: volleyme-backend
 services:
   volleyme-backend:
     image: volleyme-backend
+    networks:
+      - volleyme-backend-network
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +17,8 @@ services:
 
   volleyme-migrate:
     image: volleyme-backend
+    networks:
+      - volleyme-backend-network
     build:
       context: .
       dockerfile: Dockerfile
@@ -29,6 +33,8 @@ services:
 
   volleyme-prepare:
     image: volleyme-backend
+    networks:
+      - volleyme-backend-network
     build:
       context: .
       dockerfile: Dockerfile
@@ -42,6 +48,8 @@ services:
     image: postgres:18-alpine
     ports:
       - "5432:5432"
+    networks:
+      - volleyme-backend-network
     healthcheck:
       test: [
         "CMD-SHELL",
@@ -63,6 +71,8 @@ services:
     image: rabbitmq:latest
     container_name: rabbitmq
     restart: always
+    networks:
+      - volleyme-backend-network
     ports:
       - 5672:5672
       - 15672:15672
@@ -95,3 +105,7 @@ volumes:
   volleyme-backend-rabbitmq-log:
     name: volleyme-backend-rabbitmq-log
     driver: local
+
+networks:
+  volleyme-backend-network:
+    name: volleyme-backend-network
