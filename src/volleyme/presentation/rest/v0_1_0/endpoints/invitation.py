@@ -5,11 +5,10 @@ from dependency_injector import wiring
 
 from src.volleyme import di
 from src.volleyme.application import usecases
-from src.volleyme.presentation.rest import deps, schemas
+from src.volleyme.presentation.rest.v0_1_0 import deps, schemas
 
 invitation_router = fastapi.APIRouter(
     prefix="/invitations",
-    tags=["invitations"],
     dependencies=[fastapi.Depends(deps.authenticate_user)],
 )
 

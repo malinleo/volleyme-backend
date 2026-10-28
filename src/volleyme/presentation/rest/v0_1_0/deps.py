@@ -9,8 +9,9 @@ from src.volleyme import di
 from src.volleyme.application import services as app_services
 from src.volleyme.application import usecases
 from src.volleyme.infra import services
+from src.volleyme.presentation.rest import auth
 
-from . import auth, schemas
+from . import schemas
 
 
 @wiring.inject
