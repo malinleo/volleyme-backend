@@ -25,7 +25,7 @@ async def authenticate_user(
         fastapi.Depends(auth.auth),
     ],
 ) -> app_services.auth.AuthUser:
-    auth_usecase: usecases.AuthUseCase = await container.usecases.authenticate(
+    auth_usecase: usecases.AuthUseCase = await container.usecases.authenticate(  # type: ignore[misc]
         auth_strategy__credentials=services.JWTCredentials(
             token=credentials.credentials,
         ),

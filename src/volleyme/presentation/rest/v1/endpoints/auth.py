@@ -7,7 +7,7 @@ from src.volleyme import di
 from src.volleyme.application import services as app_services
 from src.volleyme.application import usecases
 from src.volleyme.infra import services
-from src.volleyme.presentation.rest.v0_1_0 import deps, schemas
+from src.volleyme.presentation.rest.v1 import deps, schemas
 
 auth_router = fastapi.APIRouter(prefix="/auth")
 
@@ -31,7 +31,7 @@ async def login(
         username=credentials.username,
         password=credentials.password,
     )
-    login_usecase: usecases.LoginUseCase = await container.usecases.login(
+    login_usecase: usecases.LoginUseCase = await container.usecases.login(  # type: ignore[misc]
         login_strategy__credentials=credentials_dto,
     )
     auth_token_pair = await generate_auth_token_strategy.generate(

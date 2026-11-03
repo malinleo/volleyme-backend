@@ -7,7 +7,7 @@ from dependency_injector import wiring
 
 from src.volleyme import di
 from src.volleyme.application import dto, usecases
-from src.volleyme.presentation.rest.v0_1_0 import deps, schemas
+from src.volleyme.presentation.rest.v1 import deps, schemas
 
 events_router = fastapi.APIRouter(
     prefix="/events",

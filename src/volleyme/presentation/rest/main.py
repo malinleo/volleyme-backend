@@ -7,15 +7,16 @@ import fastapi
 from src.common import usecases
 from src.config import settings
 from src.volleyme.di import DI
-from src.volleyme.presentation.rest import endpoints, exc_handlers, v0_1_0
+from src.volleyme.presentation.rest import endpoints, exc_handlers, v1
 
-_VERSION_MODULE_REGEX = re.compile(r"v\d+_\d+_\d+")
+_VERSION_MODULE_REGEX = re.compile(r"v\d+")
 
 
-def _get_api_version_modules(parent_module: str):
+def _get_api_version_modules(parent_module_path: str):
+    dotted_module_path = parent_module_path.replace("/", ".")
     return [
-        importlib.import_module(f"{parent_module}.{mod_info.name}")
-        for mod_info in pkgutil.iter_modules(parent_module)
+        importlib.import_module(f"{dotted_module_path}.{mod_info.name}")
+        for mod_info in pkgutil.iter_modules([parent_module_path])
         if _VERSION_MODULE_REGEX.fullmatch(mod_info.name)
     ]
 
@@ -24,7 +25,7 @@ container = DI()
 container.wire(
     modules=[
         __name__,
-        *_get_api_version_modules("src.volleyme.presentation.rest"),
+        *_get_api_version_modules("src/volleyme/presentation/rest"),
         endpoints.health,
     ],
     warn_unresolved=settings.DEBUG,
@@ -41,7 +42,7 @@ app = fastapi.FastAPI(
     },
 )
 
-app.include_router(v0_1_0.v0_1_0_router)
+app.include_router(v1.v1_router)
 app.include_router(endpoints.health_router)
 
 app.exception_handler(usecases.exc.UseCaseError)(exc_handlers.handle_use_case_error)

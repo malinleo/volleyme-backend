@@ -6,8 +6,8 @@ from . import app, infra
 class DI(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         modules=[
-            "src.volleyme.presentation.rest.v0_1_0.endpoints",
-            "src.volleyme.presentation.rest.v0_1_0.deps",
+            "src.volleyme.presentation.rest.v1.endpoints",
+            "src.volleyme.presentation.rest.v1.deps",
             "src.volleyme.infra.services.events",
         ],
     )
