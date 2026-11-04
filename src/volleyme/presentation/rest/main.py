@@ -1,7 +1,3 @@
-import importlib
-import pkgutil
-import re
-
 import fastapi
 
 from src.common import usecases
@@ -9,23 +5,15 @@ from src.config import settings
 from src.volleyme.di import DI
 from src.volleyme.presentation.rest import endpoints, exc_handlers, v1
 
-_VERSION_MODULE_REGEX = re.compile(r"v\d+")
-
-
-def _get_api_version_modules(parent_module_path: str):
-    dotted_module_path = parent_module_path.replace("/", ".")
-    return [
-        importlib.import_module(f"{dotted_module_path}.{mod_info.name}")
-        for mod_info in pkgutil.iter_modules([parent_module_path])
-        if _VERSION_MODULE_REGEX.fullmatch(mod_info.name)
-    ]
-
-
 container = DI()
 container.wire(
     modules=[
         __name__,
-        *_get_api_version_modules("src/volleyme/presentation/rest"),
+        v1.endpoints.auth,
+        v1.endpoints.events,
+        v1.endpoints.invitation,
+        v1.endpoints.users,
+        v1.deps,
         endpoints.health,
     ],
     warn_unresolved=settings.DEBUG,
