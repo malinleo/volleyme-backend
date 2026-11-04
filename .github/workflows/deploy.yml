@@ -2,58 +2,86 @@ name: Build & Deploy
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - feature/ci*
+  workflow_dispatch:
+
 env:
-  REGISTRY: cr.selcloud.ru
-  IMAGE_NAME: volleyme-prod/backend
+  GAR_HOST: europe-north2-docker.pkg.dev
+  IMAGE: europe-north2-docker.pkg.dev/agile-fort-310814/volleyme/backend
   DEPLOY_PATH: /opt/volleyme
 
+# Never run two deploys at the same time; queue the newer one instead
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required to request the GitHub OIDC token for Workload Identity Federation
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # Exchange the GitHub OIDC token for a short-lived GCP access token (no JSON keys stored)
+      - id: gcp-auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GAR_HOST }}
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .ci/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Build and deploy via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 15m
           script: |
             set -e
-            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-            IMAGE_TAG="${{ github.sha }}"
-            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
-            BUILD_DIR=$(mktemp -d)
+            cd "${{ env.DEPLOY_PATH }}"
+            export IMAGE_TAG="${{ needs.build.outputs.tag }}"
 
-            # Clone the repo at the exact commit
-            git clone --depth 1 --branch ${{ github.ref_name }} https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git "$BUILD_DIR"
-            cd "$BUILD_DIR"
-            
-            # The Selectel auth endpoint is rejecting GitHub runners — doesn't matter which Docker auth method we use,
-            # they all hit the same /auth endpoint under the hood.
-            # Build and push on local server.
-            docker build -t "${IMAGE}:${IMAGE_TAG:0:7}" -t "${IMAGE}:latest" -f .ci/Dockerfile .
-            docker push "${IMAGE}:${IMAGE_TAG:0:7}"
-            docker push "${IMAGE}:latest"
-
-            # Deploy
-            cd "$DEPLOY_DIR"
-            export IMAGE_TAG="${IMAGE_TAG:0:7}"
+            # The VM authenticates to Artifact Registry with its own service account
+            # (docker credential helper configured once via `gcloud auth configure-docker`)
+            docker compose pull volleyme-backend
             docker compose --profile migrate run --rm volleyme-migrate
-            docker compose up -d --remove-orphans
 
-            echo "Waiting for healthcheck..."
-            timeout 60 bash -c '
-              until [ "$(docker inspect --format="{{.State.Health.Status}}" volleyme-backend-volleyme-backend-1 2>/dev/null)" = "healthy" ]; do
-                sleep 2
-              done
-            ' || { echo "Deploy health check failed!"; docker compose logs volleyme-backend --tail 50; exit 1; }
-            echo "Deploy successful!"
+            echo "Starting services and waiting for healthcheck..."
+            docker compose up -d --remove-orphans --wait --wait-timeout 180 \
+              || { echo "Deploy health check failed!"; docker compose logs volleyme-backend --tail 50; exit 1; }
+            echo "Deploy successful! Running ${IMAGE_TAG}"
 
-            # Cleanup
-            rm -rf "$BUILD_DIR"
             docker image prune -f
-            # docker image prune -af --filter "until=24h"

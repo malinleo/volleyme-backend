@@ -1,7 +1,7 @@
 name: volleyme-backend
 
 x-app-image: &app-image
-  image: cr.selcloud.ru/volleyme-prod/backend:${IMAGE_TAG:-latest}
+  image: europe-north2-docker.pkg.dev/agile-fort-310814/volleyme/backend:${IMAGE_TAG:-latest}
 
 x-logging: &logging
   logging:
