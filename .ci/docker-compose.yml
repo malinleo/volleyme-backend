@@ -9,6 +9,7 @@ x-logging: &logging
     options:
       max-size: "50m"
       max-file: "5"
+      labels: "com.docker.compose.service"
 
 services:
   nginx:

@@ -216,16 +216,18 @@ Postgres is started automatically through `depends_on`.
 
 ## 11. Real SSL certificate (Let's Encrypt + Certbot)
 
-After the first deploy nginx is running with the dummy cert. As `deploy`:
+After the first deploy nginx is running with the dummy cert. As your own user (`malinleo`, has passwordless sudo), from `/opt/volleyme`; prefix `docker compose` with `sudo -u deploy` or run it as `deploy`:
 
 ```bash
 cd /opt/volleyme
 
-rm -rf certbot/conf/live/volleyme.xyz certbot/conf/archive/volleyme.xyz certbot/conf/renewal/volleyme.xyz.conf
+# certbot runs as root, so its files are root-owned: sudo is required
+sudo rm -rf certbot/conf/live/volleyme.xyz certbot/conf/archive/volleyme.xyz certbot/conf/renewal/volleyme.xyz.conf
 
 docker compose --profile certbot run --rm certbot certonly \
   --webroot \
   --webroot-path /var/www/certbot \
+  --cert-name volleyme.xyz \
   -d volleyme.xyz \
   -d www.volleyme.xyz \
   --email nearpin@mail.ru \
